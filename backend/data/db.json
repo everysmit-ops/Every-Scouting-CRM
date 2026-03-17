@@ -1,0 +1,576 @@
+{
+  "company": {
+    "name": "ScoutFlow HQ",
+    "locale": "ru-RU"
+  },
+  "users": [
+    {
+      "id": "user-owner",
+      "name": "Виктория",
+      "email": "owner@scoutflow.local",
+      "role": "owner",
+      "teamId": "team-north",
+      "subscription": "Enterprise Core",
+      "theme": "Sunny Coral",
+      "referralCode": "OWNER-BOOST",
+      "referralIncomePercent": 15,
+      "payoutBoost": "25%",
+      "locale": "ru",
+      "passwordSalt": "bf9cb5cfc187769f4098d0aa58be52c2",
+      "passwordHash": "1f1ef710ce25066e56d66abcafd34e8545f7b11cc4c02e3b890ea360401093ab5939b1f8b998a1cb928e3b688ed3a0570bdcc84e743de7d15b10575a703ca6e6",
+      "passwordUpdatedAt": "2026-03-17T15:47:32.052Z"
+    },
+    {
+      "id": "user-lead",
+      "name": "Ева",
+      "email": "lead@scoutflow.local",
+      "role": "lead",
+      "teamId": "team-north",
+      "subscription": "Lead Pro",
+      "theme": "Ocean Pop",
+      "referralCode": "LEAD-WAVE",
+      "referralIncomePercent": 12,
+      "payoutBoost": "18%",
+      "locale": "ru",
+      "passwordSalt": "4cc7bd6bd8882498b9a6fc6a09c20626",
+      "passwordHash": "0595754efe258fe8456affb032b7e88fd57370c81bf933c7436fff4822f3b299b42f4a4c2a8d40f410202ff3554255113f73afa6e61fc0aecb17521cd6748286",
+      "passwordUpdatedAt": "2026-03-17T15:47:32.077Z"
+    },
+    {
+      "id": "user-scout",
+      "name": "Мира",
+      "email": "scout@scoutflow.local",
+      "role": "scout",
+      "teamId": "team-north",
+      "subscription": "Scout Plus",
+      "theme": "Mango Punch",
+      "referralCode": "MIRA-LINK",
+      "referralIncomePercent": 10,
+      "payoutBoost": "12%",
+      "locale": "ru",
+      "passwordSalt": "e670603c7af109665cf9fceca8ea2b2d",
+      "passwordHash": "6a0428ef74561bc9a3ee4616ee21c3f67e019eff31755b80d538d5c4e13df88148d351a9f777050e2237efa8b07066747523cb0059ea812b18d3f970a9b36f1c",
+      "passwordUpdatedAt": "2026-03-17T15:47:32.100Z"
+    },
+    {
+      "id": "user-referral",
+      "name": "Лея",
+      "email": "referral@scoutflow.local",
+      "role": "referral",
+      "teamId": "team-wave",
+      "subscription": "Referral Growth",
+      "theme": "Sky Candy",
+      "referralCode": "LEYA-REF",
+      "referralIncomePercent": 7,
+      "payoutBoost": "8%",
+      "locale": "ru",
+      "passwordSalt": "4dc719efe13ddddd79bf82a287c407e6",
+      "passwordHash": "79bcf9ff0db2d9d960bf9c3bf1283fa0426bfd2da802b32cf6ce8d2a7035b027c79780a46dc3a53676decdab585945796155c5db9a2d028af48f18c057214062",
+      "passwordUpdatedAt": "2026-03-17T15:47:32.122Z"
+    },
+    {
+      "id": "user-scout-2",
+      "name": "Тимур",
+      "email": "timur@scoutflow.local",
+      "role": "scout",
+      "teamId": "team-wave",
+      "subscription": "Scout Core",
+      "theme": "Mint Nova",
+      "referralCode": "TIMUR-LINK",
+      "referralIncomePercent": 9,
+      "payoutBoost": "10%",
+      "locale": "ru",
+      "passwordSalt": "25ded0a7034002a8e757715e3ca38a02",
+      "passwordHash": "a432d6db94f81eba7abfe7cc484fdcb7049f16cf2a7496127914bed1b6abab5d541b7d896f7661521ecee442835c4242c869bf8f0c24913207a1b37f5241edf9",
+      "passwordUpdatedAt": "2026-03-17T15:47:32.144Z"
+    },
+    {
+      "id": "user-8b1fadf7a5",
+      "name": "Новый Тест",
+      "email": "new.user@scoutflow.local",
+      "passwordSalt": "04157281d52a3cbbf555a4d4f91e590a",
+      "passwordHash": "70b043cb51e7ed4ffe860cdc7b918ed600af016405894c3661b9fb74fd8f3c8cf9b778778e0577bbf4644a6e857e0c018b394a1e0d063ee6f6e1e6280912410a",
+      "passwordUpdatedAt": "2026-03-17T16:17:34.856Z",
+      "role": "scout",
+      "teamId": "team-north",
+      "subscription": "Scout Core",
+      "theme": "Starter",
+      "referralCode": "REF-3D94D6",
+      "referralIncomePercent": 5,
+      "payoutBoost": "6%",
+      "locale": "ru"
+    }
+  ],
+  "teams": [
+    {
+      "id": "team-north",
+      "name": "North Star",
+      "leadId": "user-lead",
+      "memberIds": [
+        "user-owner",
+        "user-lead",
+        "user-scout",
+        "user-8b1fadf7a5"
+      ],
+      "leadPercent": 12,
+      "companyPercent": 8,
+      "chatActivity": 91
+    },
+    {
+      "id": "team-wave",
+      "name": "Wave Hunters",
+      "leadId": "user-referral",
+      "memberIds": [
+        "user-referral",
+        "user-scout-2"
+      ],
+      "leadPercent": 10,
+      "companyPercent": 8,
+      "chatActivity": 68
+    }
+  ],
+  "offers": [
+    {
+      "id": "offer-1",
+      "title": "Crypto Support Agent",
+      "reward": "$250",
+      "assignedScoutIds": [
+        "user-scout",
+        "user-referral"
+      ],
+      "adminId": "user-owner",
+      "openings": 6,
+      "priority": "high",
+      "createdAt": "2026-03-16T09:00:00.000Z"
+    },
+    {
+      "id": "offer-2",
+      "title": "HR Recruiter",
+      "reward": "$320",
+      "assignedScoutIds": [
+        "user-scout-2"
+      ],
+      "adminId": "user-owner",
+      "openings": 4,
+      "priority": "medium",
+      "createdAt": "2026-03-16T10:00:00.000Z"
+    },
+    {
+      "id": "offer-3",
+      "title": "Sales Closer",
+      "reward": "$410",
+      "assignedScoutIds": [
+        "user-scout",
+        "user-scout-2"
+      ],
+      "adminId": "user-owner",
+      "openings": 3,
+      "priority": "medium",
+      "createdAt": "2026-03-16T11:00:00.000Z"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "candidate-1",
+      "name": "Daniel Kim",
+      "offerId": "offer-1",
+      "scoutId": "user-scout",
+      "teamId": "team-north",
+      "status": "twoShifts",
+      "location": "Seoul",
+      "interviewPassed": true,
+      "registrationPassed": true,
+      "shiftsCompleted": 2,
+      "notes": "Сильная дисциплина, высокий шанс на retention.",
+      "createdAt": "2026-03-14T12:00:00.000Z"
+    },
+    {
+      "id": "candidate-2",
+      "name": "София Белая",
+      "offerId": "offer-2",
+      "scoutId": "user-scout-2",
+      "teamId": "team-wave",
+      "status": "interview",
+      "location": "Warsaw",
+      "interviewPassed": true,
+      "registrationPassed": false,
+      "shiftsCompleted": 0,
+      "notes": "Нужен follow-up после интервью.",
+      "createdAt": "2026-03-15T12:00:00.000Z"
+    },
+    {
+      "id": "candidate-3",
+      "name": "Marcelo Diaz",
+      "offerId": "offer-3",
+      "scoutId": "user-referral",
+      "teamId": "team-wave",
+      "status": "training",
+      "location": "Madrid",
+      "interviewPassed": false,
+      "registrationPassed": false,
+      "shiftsCompleted": 0,
+      "notes": "Назначен на обязательное обучение.",
+      "createdAt": "2026-03-15T14:00:00.000Z"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1",
+      "title": "Закрыть 4 интервью по Crypto Support Agent",
+      "byUserId": "user-owner",
+      "assigneeUserId": null,
+      "teamId": "team-north",
+      "deadline": "2026-03-20",
+      "priority": "high",
+      "done": true,
+      "createdAt": "2026-03-17T09:30:00.000Z"
+    },
+    {
+      "id": "task-2",
+      "title": "Подготовить welcome-пост для новых рефералов",
+      "byUserId": "user-lead",
+      "assigneeUserId": null,
+      "teamId": "team-wave",
+      "deadline": "2026-03-18",
+      "priority": "medium",
+      "done": false,
+      "createdAt": "2026-03-17T10:00:00.000Z"
+    }
+  ],
+  "trainings": [
+    {
+      "id": "training-1",
+      "title": "База качества интервью",
+      "role": "scout",
+      "mandatory": true,
+      "assignedByUserId": "user-owner",
+      "assignedUserIds": [
+        "user-scout",
+        "user-scout-2"
+      ],
+      "completedUserIds": [
+        "user-scout"
+      ],
+      "createdAt": "2026-03-13T09:00:00.000Z"
+    },
+    {
+      "id": "training-2",
+      "title": "Реферальная этика и удержание",
+      "role": "referral",
+      "mandatory": true,
+      "assignedByUserId": "user-owner",
+      "assignedUserIds": [
+        "user-referral"
+      ],
+      "completedUserIds": [],
+      "createdAt": "2026-03-13T10:00:00.000Z"
+    },
+    {
+      "id": "training-3",
+      "title": "Управление team KPI",
+      "role": "lead",
+      "mandatory": true,
+      "assignedByUserId": "user-owner",
+      "assignedUserIds": [
+        "user-lead"
+      ],
+      "completedUserIds": [
+        "user-lead"
+      ],
+      "createdAt": "2026-03-13T11:00:00.000Z"
+    }
+  ],
+  "posts": [
+    {
+      "id": "post-1",
+      "type": "news",
+      "authorId": "user-owner",
+      "authorName": "ScoutFlow Newsroom",
+      "title": "Весенний KPI-спринт открыт",
+      "body": "Команды с лучшей конверсией получат повышенный бонус к выплатам.",
+      "createdAt": "2026-03-16T08:00:00.000Z"
+    },
+    {
+      "id": "post-2",
+      "type": "forum",
+      "authorId": "user-scout",
+      "authorName": "Мира",
+      "title": "Лучшие скрипты для follow-up после интервью",
+      "body": "Собрала шаблоны сообщений для возврата теплых кандидатов.",
+      "createdAt": "2026-03-15T18:00:00.000Z"
+    }
+  ],
+  "chats": [
+    {
+      "id": "chat-1",
+      "name": "North Star Team Chat",
+      "teamId": "team-north",
+      "global": false,
+      "participantIds": [
+        "user-owner",
+        "user-lead",
+        "user-scout"
+      ],
+      "messages": [
+        {
+          "id": "msg-1",
+          "authorId": "user-lead",
+          "authorName": "Ева",
+          "text": "Команда, сегодня фокус на регистрации после интервью.",
+          "time": "09:10"
+        },
+        {
+          "id": "msg-2",
+          "authorId": "user-scout",
+          "authorName": "Мира",
+          "text": "Уже пушу 3 кандидатов на этап onboarding.",
+          "time": "09:13"
+        }
+      ]
+    },
+    {
+      "id": "chat-2",
+      "name": "Wave Hunters Team Chat",
+      "teamId": "team-wave",
+      "global": false,
+      "participantIds": [
+        "user-referral",
+        "user-scout-2"
+      ],
+      "messages": [
+        {
+          "id": "msg-3",
+          "authorId": "user-referral",
+          "authorName": "Лея",
+          "text": "Нужен сильный EN-оффер на эту неделю.",
+          "time": "10:05"
+        }
+      ]
+    },
+    {
+      "id": "chat-3",
+      "name": "Global Lounge",
+      "teamId": null,
+      "global": true,
+      "participantIds": [],
+      "messages": [
+        {
+          "id": "msg-4",
+          "authorId": "user-owner",
+          "authorName": "Виктория",
+          "text": "Добро пожаловать в общий чат компании.",
+          "time": "08:45"
+        }
+      ]
+    }
+  ],
+  "publicApplications": [
+    {
+      "id": "application-1",
+      "name": "Алина Мороз",
+      "contact": "@alina_hr",
+      "experience": "2 года",
+      "languages": "RU / EN",
+      "motivation": "Хочу расти в международном рекрутинге и люблю соревновательные KPI.",
+      "createdAt": "2026-03-14T09:00:00.000Z",
+      "status": "approved"
+    }
+  ],
+  "notifications": [
+    {
+      "id": "notif-1",
+      "text": "Daniel Kim закрыл 2 смены и попал в KPI команды.",
+      "userIds": [
+        "user-owner",
+        "user-lead",
+        "user-scout"
+      ],
+      "createdAt": "2026-03-16T15:00:00.000Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-2",
+      "text": "Marcelo Diaz назначен на обязательное обучение.",
+      "userIds": [
+        "user-owner",
+        "user-referral"
+      ],
+      "createdAt": "2026-03-16T16:00:00.000Z",
+      "readBy": []
+    },
+    {
+      "id": "notif-3",
+      "text": "Оффер HR Recruiter открыт для команды Wave Hunters.",
+      "userIds": [
+        "user-referral",
+        "user-scout-2"
+      ],
+      "createdAt": "2026-03-16T17:00:00.000Z",
+      "readBy": []
+    }
+  ],
+  "auditLog": [
+    {
+      "id": "audit-891398df0e",
+      "actorId": "user-owner",
+      "action": "LOGIN",
+      "entityType": "session",
+      "entityId": "bc4d21289ce55294b46f70fccd45feadbcbf648d26963533",
+      "details": {
+        "email": "owner@scoutflow.local"
+      },
+      "createdAt": "2026-03-17T16:47:57.522Z"
+    },
+    {
+      "id": "audit-6b19a953a0",
+      "actorId": "user-owner",
+      "action": "LOGIN",
+      "entityType": "session",
+      "entityId": "ead7fed9a49bc47e6c3489720f1a6599e58cc1b6d5719536",
+      "details": {
+        "email": "owner@scoutflow.local"
+      },
+      "createdAt": "2026-03-17T16:43:18.686Z"
+    },
+    {
+      "id": "audit-2ff0da4066",
+      "actorId": "user-owner",
+      "action": "LOGIN",
+      "entityType": "session",
+      "entityId": "5e61212f78c29123591ef10007818d39d3b12466cb655408",
+      "details": {
+        "email": "owner@scoutflow.local"
+      },
+      "createdAt": "2026-03-17T16:40:11.312Z"
+    },
+    {
+      "id": "audit-10ad1a12d7",
+      "actorId": "user-owner",
+      "action": "LOGIN",
+      "entityType": "session",
+      "entityId": "987aa76b799a7d586d5f6e76a136c290d8d8fd6f1d83e5a2",
+      "details": {
+        "email": "owner@scoutflow.local"
+      },
+      "createdAt": "2026-03-17T16:37:00.317Z"
+    },
+    {
+      "id": "audit-e0454fad0a",
+      "actorId": "user-owner",
+      "action": "LOGIN",
+      "entityType": "session",
+      "entityId": "7fbd394030784dbb8675b57ac76285afe9e72091c9b8e9b1",
+      "details": {
+        "email": "owner@scoutflow.local"
+      },
+      "createdAt": "2026-03-17T16:34:46.786Z"
+    },
+    {
+      "id": "audit-dc9b35b762",
+      "actorId": "user-owner",
+      "action": "LOGIN",
+      "entityType": "session",
+      "entityId": "91e6830271bf3de96c41f458c0c0c3eda29adde44885b5bf",
+      "details": {
+        "email": "owner@scoutflow.local"
+      },
+      "createdAt": "2026-03-17T16:29:59.432Z"
+    },
+    {
+      "id": "audit-d4c26673ea",
+      "actorId": "user-owner",
+      "action": "LOGIN",
+      "entityType": "session",
+      "entityId": "08ee847123a07aae80298a904e3d7ebf6afb0419abae3a21",
+      "details": {
+        "email": "owner@scoutflow.local"
+      },
+      "createdAt": "2026-03-17T16:27:27.299Z"
+    },
+    {
+      "id": "audit-84896b6f67",
+      "actorId": "user-owner",
+      "action": "LOGIN",
+      "entityType": "session",
+      "entityId": "f558ac7f93e3e1146d824f26b53137cac5867f2d3627054d",
+      "details": {
+        "email": "owner@scoutflow.local"
+      },
+      "createdAt": "2026-03-17T16:23:32.815Z"
+    },
+    {
+      "id": "audit-20b5aca9a9",
+      "actorId": "user-owner",
+      "action": "UPDATE",
+      "entityType": "task",
+      "entityId": "task-1",
+      "details": {
+        "done": true
+      },
+      "createdAt": "2026-03-17T16:17:35.266Z"
+    },
+    {
+      "id": "audit-702ccd92e2",
+      "actorId": "user-owner",
+      "action": "CREATE",
+      "entityType": "user",
+      "entityId": "user-8b1fadf7a5",
+      "details": {
+        "email": "new.user@scoutflow.local"
+      },
+      "createdAt": "2026-03-17T16:17:34.858Z"
+    },
+    {
+      "id": "audit-b0f58940f4",
+      "actorId": "user-owner",
+      "action": "APPROVED",
+      "entityType": "application",
+      "entityId": "application-1",
+      "details": {
+        "name": "Алина Мороз"
+      },
+      "createdAt": "2026-03-17T16:17:33.970Z"
+    },
+    {
+      "id": "audit-2476ffb5d3",
+      "actorId": "user-owner",
+      "action": "LOGIN",
+      "entityType": "session",
+      "entityId": "99ab5e40ee42c2c86cf15d5ab3fd708ceaae3bb37afd04fc",
+      "details": {
+        "email": "owner@scoutflow.local"
+      },
+      "createdAt": "2026-03-17T16:17:11.876Z"
+    },
+    {
+      "id": "audit-85edf69b02",
+      "actorId": "user-owner",
+      "action": "LOGIN",
+      "entityType": "session",
+      "entityId": "0cb32f33e02922080e2a9cd18f08ac29eff570088ce05dd4",
+      "details": {
+        "email": "owner@scoutflow.local"
+      },
+      "createdAt": "2026-03-17T15:47:32.185Z"
+    },
+    {
+      "id": "audit-1",
+      "actorId": "user-owner",
+      "action": "CREATE",
+      "entityType": "offer",
+      "entityId": "offer-1",
+      "details": {
+        "title": "Crypto Support Agent"
+      },
+      "createdAt": "2026-03-16T09:00:00.000Z"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "session-bd1c1df07c",
+      "userId": "user-owner",
+      "token": "bc4d21289ce55294b46f70fccd45feadbcbf648d26963533",
+      "createdAt": "2026-03-17T16:47:57.522Z"
+    }
+  ]
+}

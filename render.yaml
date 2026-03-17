@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: scoutflow-hq
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: 4173
+      - key: DB_PROVIDER
+        value: postgres
+      - key: POSTGRES_SSL
+        value: "true"
