@@ -7,79 +7,79 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Baloo+2:wght@500;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <div class="app-shell landing-shell">
       <header class="hero" id="landing">
         <nav class="topbar">
           <div class="brand">
             <span class="brand-badge">ES</span>
             <div>
               <p>Every Scouting</p>
-              <span>HR CRM + внутреннее рабочее пространство</span>
+              <span>HR CRM + рабочее пространство команды</span>
             </div>
           </div>
           <div class="topbar-actions">
-            <button class="ghost-btn" data-scroll="workspace">Платформа</button>
+            <a class="ghost-btn link-btn" href="/workspace">Платформа</a>
             <button class="primary-btn" data-scroll="apply">Подать заявку</button>
           </div>
         </nav>
 
         <div class="hero-grid">
           <section class="hero-copy card blur-card">
-            <span class="eyebrow">Recruiting OS for modern teams</span>
-            <h1>Единая платформа для найма, обучения, KPI и жизни команды.</h1>
+            <span class="eyebrow">Recruiting workspace for modern scouting teams</span>
+            <h1>Единая платформа для кандидатов, KPI, обучения и командной работы.</h1>
             <p>
-              Every Scouting объединяет CRM кандидатов, офферы, командные процессы, форум,
-              новости, обучение и реферальную систему в одном продукте.
+              Every Scouting объединяет CRM кандидатов, офферы, обучение, аналитику,
+              финансы, команды и внутреннее сообщество в одном продукте.
             </p>
             <div class="hero-actions">
-              <button class="primary-btn" data-scroll="workspace">Открыть платформу</button>
+              <a class="primary-btn link-btn" href="/workspace">Открыть платформу</a>
               <button class="secondary-btn" data-scroll="apply">Оставить заявку</button>
             </div>
             <div class="hero-stats">
               <article>
-                <strong>ATS</strong>
+                <strong>CRM</strong>
                 <span>кандидаты и статусы</span>
               </article>
               <article>
-                <strong>CRM</strong>
-                <span>офферы и контроль</span>
+                <strong>KPI</strong>
+                <span>выплаты и аналитика</span>
               </article>
               <article>
-                <strong>Social</strong>
-                <span>форум, рейтинг, сообщество</span>
+                <strong>Teams</strong>
+                <span>команды и процессы</span>
               </article>
             </div>
           </section>
 
           <section class="hero-preview card">
-            <div class="preview-ribbon">Production-ready foundation</div>
+            <div class="preview-ribbon">Internal platform</div>
             <div class="preview-window">
               <div class="preview-column">
-                <span>Auth + roles</span>
+                <span>Roles</span>
                 <strong>4</strong>
-                <small>боевые роли</small>
+                <small>уровня доступа</small>
               </div>
               <div class="preview-column accent">
                 <span>Modules</span>
                 <strong>10+</strong>
-                <small>в едином UI</small>
+                <small>в одном workspace</small>
               </div>
               <div class="preview-column">
-                <span>API</span>
-                <strong>JSON</strong>
-                <small>на локальном backend</small>
+                <span>Format</span>
+                <strong>Web</strong>
+                <small>desktop + mobile</small>
               </div>
             </div>
             <div class="preview-feed">
-              <div><span class="dot green"></span>Обязательное обучение блокирует доступ до завершения</div>
-              <div><span class="dot orange"></span>Главный админ видит внешние заявки с landing</div>
-              <div><span class="dot blue"></span>Скаут получает уведомления по своим кандидатам</div>
+              <div><span class="dot green"></span>Обучение блокирует критичные действия до завершения</div>
+              <div><span class="dot orange"></span>Главный админ видит внешние заявки сразу после отправки</div>
+              <div><span class="dot blue"></span>Скауты работают в своем компактном рабочем пространстве</div>
             </div>
           </section>
         </div>
@@ -88,20 +88,19 @@
       <main>
         <section class="features-band">
           <article class="feature-pill">Авторизация</article>
-          <article class="feature-pill">Ролевой доступ</article>
-          <article class="feature-pill">Обучение</article>
+          <article class="feature-pill">Кандидаты</article>
           <article class="feature-pill">Команды</article>
-          <article class="feature-pill">Рейтинг</article>
-          <article class="feature-pill">Аудит</article>
+          <article class="feature-pill">Финансы</article>
+          <article class="feature-pill">Обучение</article>
+          <article class="feature-pill">Аналитика</article>
         </section>
 
         <section class="apply-zone section-grid" id="apply">
           <div class="card section-copy">
             <span class="eyebrow">Public entry</span>
-            <h2>Внешняя заявка для будущих скаутов</h2>
+            <h2>Заявка для будущих скаутов</h2>
             <p>
-              Кандидат заполняет короткую форму, а заявка сразу попадает в очередь главного
-              администратора внутри платформы.
+              Внешний кандидат оставляет короткую заявку, а главный админ сразу видит ее внутри Every Scouting.
             </p>
           </div>
 
@@ -136,110 +135,14 @@
               ></textarea>
             </label>
             <button class="primary-btn wide" type="submit">Отправить заявку</button>
+            <div class="small-note" id="landingMessage">После отправки заявка сразу попадет главному админу.</div>
           </form>
-        </section>
-
-        <section class="workspace" id="workspace">
-          <div class="workspace-header">
-            <div>
-              <span class="eyebrow">Internal platform</span>
-              <h2>Every Scouting Workspace</h2>
-              <p>
-                Войдите под рабочим аккаунтом и получите интерфейс по своей роли:
-                управление, обучение, KPI, коммуникации и контроль воронки.
-              </p>
-            </div>
-            <div class="role-switcher card auth-panel" id="sessionPanel">
-              <div id="guestState">
-                <strong>Demo logins</strong>
-                <div class="chip-row">
-                  <span class="chip">owner@scoutflow.local / demo123</span>
-                  <span class="chip">lead@scoutflow.local / demo123</span>
-                  <span class="chip">scout@scoutflow.local / demo123</span>
-                  <span class="chip">referral@scoutflow.local / demo123</span>
-                </div>
-              </div>
-              <div class="session-user hidden" id="activeSession"></div>
-            </div>
-          </div>
-
-          <section class="auth-grid">
-            <form class="card login-card" id="loginForm">
-              <div class="panel-header">
-                <div>
-                  <h3>Вход в рабочее пространство</h3>
-                  <div class="panel-subtitle">Авторизация с разными правами доступа по ролям.</div>
-                </div>
-              </div>
-              <label>
-                Email
-                <input type="email" name="email" placeholder="owner@scoutflow.local" required />
-              </label>
-              <label>
-                Пароль
-                <input type="password" name="password" placeholder="demo123" required />
-              </label>
-              <button class="primary-btn wide" type="submit">Войти</button>
-              <div class="small-note" id="loginMessage">После входа загрузятся ваши данные и разрешенные действия.</div>
-            </form>
-
-            <section class="card content-panel hidden" id="workspaceApp">
-              <div class="workspace-controls">
-                <div class="live-sync-chip" id="liveSyncBadge">Live sync: off</div>
-                <label>
-                  Язык интерфейса
-                  <select id="languageSelect">
-                    <option value="ru">Русский</option>
-                    <option value="en">English</option>
-                  </select>
-                </label>
-                <button class="ghost-btn" id="logoutBtn">Выйти</button>
-              </div>
-
-              <section class="dashboard-grid" id="summaryGrid"></section>
-
-              <section class="main-grid">
-                <aside class="card sidebar-nav">
-                  <button class="nav-item active" data-view="dashboard">Обзор</button>
-                  <button class="nav-item" data-view="notifications">Уведомления</button>
-                  <button class="nav-item" data-view="candidates">Кандидаты</button>
-                  <button class="nav-item" data-view="calendar">Календарь</button>
-                  <button class="nav-item" data-view="offers">Офферы</button>
-                  <button class="nav-item" data-view="teams">Команды</button>
-                  <button class="nav-item" data-view="tasks">Задачи</button>
-                  <button class="nav-item" data-view="finance">Финансы</button>
-                  <button class="nav-item" data-view="analytics">Аналитика</button>
-                  <button class="nav-item" data-view="training">Обучение</button>
-                  <button class="nav-item" data-view="social">Соцпространство</button>
-                  <button class="nav-item" data-view="profile">Профиль</button>
-                  <button class="nav-item" data-view="management">Управление</button>
-                </aside>
-
-                <section class="content-stack">
-                  <article class="card content-panel" id="view-dashboard"></article>
-                  <article class="card content-panel hidden" id="view-notifications"></article>
-                  <article class="card content-panel hidden" id="view-candidates"></article>
-                  <article class="card content-panel hidden" id="view-calendar"></article>
-                  <article class="card content-panel hidden" id="view-offers"></article>
-                  <article class="card content-panel hidden" id="view-teams"></article>
-                  <article class="card content-panel hidden" id="view-tasks"></article>
-                  <article class="card content-panel hidden" id="view-finance"></article>
-                  <article class="card content-panel hidden" id="view-analytics"></article>
-                  <article class="card content-panel hidden" id="view-training"></article>
-                  <article class="card content-panel hidden" id="view-social"></article>
-                  <article class="card content-panel hidden" id="view-profile"></article>
-                  <article class="card content-panel hidden" id="view-management"></article>
-                </section>
-              </section>
-            </section>
-          </section>
         </section>
       </main>
     </div>
 
-    <div class="doc-preview-overlay hidden" id="docPreviewOverlay"></div>
     <div class="toast-stack" id="toastStack"></div>
 
-    <script src="./app.js"></script>
+    <script src="./landing.js"></script>
   </body>
 </html>

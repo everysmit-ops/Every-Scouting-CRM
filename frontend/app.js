@@ -600,6 +600,7 @@ function renderNav() {
 function renderUtilityPanels() {
   const notificationPopover = el("notificationPopover");
   const notificationBadge = el("notificationBadge");
+  const settingsPopover = el("settingsPopover");
   const unread = getUnreadNotifications();
 
   if (notificationBadge) {
@@ -633,6 +634,23 @@ function renderUtilityPanels() {
       <div class="inline-actions">
         <button class="ghost-btn" type="button" data-mark-all-read-popover="true" ${!unread.length ? "disabled" : ""}>Прочитать все</button>
       </div>
+    `;
+  }
+
+  if (settingsPopover) {
+    settingsPopover.innerHTML = `
+      <div class="popover-title-row">
+        <strong>Настройки</strong>
+        <span class="chip">${currentLanguage.toUpperCase()}</span>
+      </div>
+      <label>
+        Язык интерфейса
+        <select id="languageSelect">
+          <option value="ru" ${currentLanguage === "ru" ? "selected" : ""}>Русский</option>
+          <option value="en" ${currentLanguage === "en" ? "selected" : ""}>English</option>
+        </select>
+      </label>
+      <div class="small-note">Быстрые настройки workspace вынесены в нижнюю левую часть экрана.</div>
     `;
   }
 
@@ -672,6 +690,13 @@ function renderUtilityPanels() {
       }
     });
   });
+
+  const settingsToggleBtn = el("settingsToggleBtn");
+  if (settingsToggleBtn) {
+    settingsToggleBtn.addEventListener("click", () => {
+      if (settingsPopover) settingsPopover.classList.toggle("hidden");
+    });
+  }
 }
 
 function renderDashboardView() {
