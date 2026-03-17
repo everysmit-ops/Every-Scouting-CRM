@@ -1,5 +1,8 @@
 const crypto = require("crypto");
+const fs = require("fs/promises");
+const path = require("path");
 const { nowIso, newId, hashPassword, safeUser } = require("../lib/auth");
+const { UPLOADS_ROOT } = require("../lib/config");
 const {
   createAudit,
   createNotification,
@@ -10,6 +13,85 @@ const {
 } = require("../lib/domain");
 
 function createPlatformService(repository) {
+  async function ensureUploadsDir() {
+    await fs.mkdir(UPLOADS_ROOT, { recursive: true });
+  }
+
+  function sanitizeFilename(filename) {
+    const original = path.basename(String(filename || "upload"));
+    const ext = path.extname(original).toLowerCase();
+    const stem = path.basename(original, ext).toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+    return {
+      ext,
+      stem: stem || "file",
+    };
+  }
+
+  async function saveUploadAsset(user, payload = {}) {
+    const filename = String(payload.filename || "").trim();
+    const dataBase64 = String(payload.dataBase64 || "").trim();
+    const contentType = String(payload.contentType || "application/octet-stream").trim();
+
+    if (!filename) throw new Error("Filename is required");
+    if (!dataBase64) throw new Error("Upload data is required");
+
+    const normalizedBase64 = dataBase64.includes(",") ? dataBase64.split(",").pop() : dataBase64;
+    const buffer = Buffer.from(normalizedBase64, "base64");
+    if (!buffer.length) throw new Error("Upload is empty");
+    if (buffer.length > 8 * 1024 * 1024) throw new Error("File is too large. Max 8 MB");
+
+    const { ext, stem } = sanitizeFilename(filename);
+    const storedName = `${newId("upload")}-${stem}${ext}`;
+    const filePath = path.join(UPLOADS_ROOT, storedName);
+
+    await ensureUploadsDir();
+    await fs.writeFile(filePath, buffer);
+
+    if (typeof repository.createAuditEntry === "function") {
+      await repository.createAuditEntry({
+        id: newId("audit"),
+        actorId: user.id,
+        action: "UPLOAD",
+        entityType: "asset",
+        entityId: storedName,
+        details: { filename, contentType, size: buffer.length },
+        createdAt: nowIso(),
+      });
+    }
+
+    return {
+      upload: {
+        filename,
+        contentType,
+        size: buffer.length,
+        url: `/uploads/${storedName}`,
+      },
+    };
+  }
+
+  function getUploadFilePath(url) {
+    if (!String(url || "").startsWith("/uploads/")) return null;
+    return path.join(UPLOADS_ROOT, path.basename(url));
+  }
+
+  async function cleanupUploadedFile(url) {
+    const filePath = getUploadFilePath(url);
+    if (!filePath) return;
+    await fs.unlink(filePath).catch(() => undefined);
+  }
+
+  function parseMoney(value) {
+    const normalized = String(value || "").replace(/[^0-9.,-]/g, "").replace(",", ".");
+    const amount = Number(normalized);
+    return Number.isFinite(amount) ? amount : 0;
+  }
+
+  function parsePercent(value) {
+    const normalized = String(value || "").replace(/[^0-9.,-]/g, "").replace(",", ".");
+    const amount = Number(normalized);
+    return Number.isFinite(amount) ? amount : 0;
+  }
+
   function findUserByCredentials(db, email) {
     return db.users.find((item) => item.email.toLowerCase() === String(email || "").toLowerCase());
   }
@@ -32,6 +114,7 @@ function createPlatformService(repository) {
       referralIncomePercent: Number(payload.referralIncomePercent || 5),
       payoutBoost: payload.payoutBoost || "5%",
       locale: payload.locale || "ru",
+      permissionsOverride: payload.permissionsOverride || {},
     };
     db.users.push(createdUser);
     const team = db.teams.find((item) => item.id === createdUser.teamId);
@@ -39,6 +122,61 @@ function createPlatformService(repository) {
       team.memberIds.push(createdUser.id);
     }
     return createdUser;
+  }
+
+  function syncPayoutsInDb(db) {
+    db.payouts = Array.isArray(db.payouts) ? db.payouts : [];
+    const payoutsByCandidateId = new Map(db.payouts.map((payout) => [payout.candidateId, payout]));
+
+    db.candidates
+      .filter((candidate) => candidate.interviewPassed && candidate.registrationPassed && candidate.shiftsCompleted >= 2)
+      .forEach((candidate) => {
+        const scout = db.users.find((user) => user.id === candidate.scoutId);
+        const offer = db.offers.find((item) => item.id === candidate.offerId);
+        const baseAmount = parseMoney(offer?.reward);
+        const boostPercent = parsePercent(scout?.payoutBoost);
+        const boostAmount = Math.round((baseAmount * boostPercent) / 100);
+        const finalAmount = baseAmount + boostAmount;
+        const referralPercent = Number(scout?.referralIncomePercent || 0);
+        const referralAmount = Math.round((finalAmount * referralPercent) / 100);
+        const existing = payoutsByCandidateId.get(candidate.id);
+
+        const payout = {
+          id: existing?.id || newId("payout"),
+          candidateId: candidate.id,
+          scoutId: candidate.scoutId,
+          teamId: candidate.teamId,
+          offerId: candidate.offerId,
+          baseAmount,
+          boostPercent,
+          boostAmount,
+          finalAmount,
+          referralPercent,
+          referralAmount,
+          status: existing?.status || "pending",
+          createdAt: existing?.createdAt || candidate.createdAt || nowIso(),
+          approvedAt: existing?.approvedAt || null,
+          paidAt: existing?.paidAt || null,
+          updatedAt: nowIso(),
+        };
+
+        payoutsByCandidateId.set(candidate.id, payout);
+      });
+
+    db.payouts = Array.from(payoutsByCandidateId.values()).sort((left, right) =>
+      String(right.createdAt).localeCompare(String(left.createdAt)),
+    );
+  }
+
+  async function ensurePayoutsSynced() {
+    if (typeof repository.syncPayouts === "function") {
+      await repository.syncPayouts(syncPayoutsInDb);
+      return;
+    }
+
+    await repository.transaction(async (db) => {
+      syncPayoutsInDb(db);
+    });
   }
 
   return {
@@ -98,11 +236,47 @@ function createPlatformService(repository) {
     },
 
     async bootstrap(user) {
+      await ensurePayoutsSynced();
       if (typeof repository.getBootstrapData === "function") {
         return repository.getBootstrapData(user);
       }
       const db = await repository.read();
       return getBootstrap(db, user);
+    },
+
+    async markNotificationRead(user, notificationId) {
+      if (typeof repository.markNotificationRead === "function") {
+        await repository.markNotificationRead(notificationId, user.id, nowIso());
+        return { ok: true, notificationId };
+      }
+
+      return repository.transaction(async (db) => {
+        const notification = (db.notifications || []).find((item) => item.id === notificationId);
+        if (!notification) throw new Error("Notification not found");
+        notification.readBy = Array.isArray(notification.readBy) ? notification.readBy : [];
+        if (!notification.readBy.includes(user.id)) {
+          notification.readBy.push(user.id);
+        }
+        return { ok: true, notificationId };
+      });
+    },
+
+    async markAllNotificationsRead(user) {
+      if (typeof repository.markAllNotificationsRead === "function") {
+        await repository.markAllNotificationsRead(user.id, nowIso());
+        return { ok: true };
+      }
+
+      return repository.transaction(async (db) => {
+        (db.notifications || []).forEach((notification) => {
+          if (notification.userIds && !notification.userIds.includes(user.id)) return;
+          notification.readBy = Array.isArray(notification.readBy) ? notification.readBy : [];
+          if (!notification.readBy.includes(user.id)) {
+            notification.readBy.push(user.id);
+          }
+        });
+        return { ok: true };
+      });
     },
 
     async createPublicApplication(payload) {
@@ -161,6 +335,10 @@ function createPlatformService(repository) {
         createAudit(db, "public", "CREATE", "application", application.id, { name: application.name });
         return { ok: true, application };
       });
+    },
+
+    async uploadAsset(user, payload = {}) {
+      return saveUploadAsset(user, payload);
     },
 
     async decideApplication(user, applicationId, decision, payload = {}) {
@@ -235,9 +413,15 @@ function createPlatformService(repository) {
           teamId: payload.teamId || user.teamId || db.teams[0]?.id,
           status: payload.status || "screening",
           location: payload.location || "Remote",
+          interviewAt: payload.interviewAt || null,
+          interviewFormat: payload.interviewFormat || "video",
+          interviewerName: payload.interviewerName || "",
+          interviewStatus: payload.interviewStatus || (payload.interviewAt ? "scheduled" : "unscheduled"),
+          interviewNotes: payload.interviewNotes || "",
           interviewPassed: false,
           registrationPassed: false,
           shiftsCompleted: 0,
+          documents: [],
           notes: payload.notes || "Добавлен через CRM",
           createdAt: nowIso(),
         };
@@ -275,9 +459,15 @@ function createPlatformService(repository) {
           teamId: payload.teamId || user.teamId || db.teams[0]?.id,
           status: payload.status || "screening",
           location: payload.location || "Remote",
+          interviewAt: payload.interviewAt || null,
+          interviewFormat: payload.interviewFormat || "video",
+          interviewerName: payload.interviewerName || "",
+          interviewStatus: payload.interviewStatus || (payload.interviewAt ? "scheduled" : "unscheduled"),
+          interviewNotes: payload.interviewNotes || "",
           interviewPassed: false,
           registrationPassed: false,
           shiftsCompleted: 0,
+          documents: [],
           notes: payload.notes || "Добавлен через CRM",
           createdAt: nowIso(),
         };
@@ -316,6 +506,7 @@ function createPlatformService(repository) {
             createdAt: nowIso(),
           });
         }
+        await ensurePayoutsSynced();
         const fresh = await repository.read();
         const updated = fresh.candidates.find((item) => item.id === candidateId);
         return { candidate: expandCandidates(fresh, [updated])[0] };
@@ -329,6 +520,11 @@ function createPlatformService(repository) {
         }
         Object.assign(candidate, {
           status: payload.status ?? candidate.status,
+          interviewAt: payload.interviewAt ?? candidate.interviewAt,
+          interviewFormat: payload.interviewFormat ?? candidate.interviewFormat,
+          interviewerName: payload.interviewerName ?? candidate.interviewerName,
+          interviewStatus: payload.interviewStatus ?? candidate.interviewStatus,
+          interviewNotes: payload.interviewNotes ?? candidate.interviewNotes,
           interviewPassed: payload.interviewPassed ?? candidate.interviewPassed,
           registrationPassed: payload.registrationPassed ?? candidate.registrationPassed,
           shiftsCompleted: payload.shiftsCompleted ?? candidate.shiftsCompleted,
@@ -336,7 +532,164 @@ function createPlatformService(repository) {
         });
         createNotification(db, `Статус кандидата ${candidate.name} обновлен`, [candidate.scoutId]);
         createAudit(db, user.id, "UPDATE", "candidate", candidate.id, payload);
+        syncPayoutsInDb(db);
         return { candidate: expandCandidates(db, [candidate])[0] };
+      });
+    },
+
+    async addCandidateDocument(user, candidateId, payload = {}) {
+      if (typeof repository.insertCandidateDocument === "function") {
+        const currentDb = await repository.read();
+        const candidate = currentDb.candidates.find((item) => item.id === candidateId);
+        if (!candidate) throw new Error("Candidate not found");
+        if (user.role !== "owner" && user.role !== "lead" && candidate.scoutId !== user.id) {
+          throw new Error("Forbidden");
+        }
+        const document = {
+          id: newId("doc"),
+          candidateId,
+          title: payload.title || "Новый документ",
+          type: payload.type || "link",
+          url: payload.url || "",
+          note: payload.note || "",
+          uploadedByUserId: user.id,
+          createdAt: nowIso(),
+        };
+        await repository.insertCandidateDocument(document);
+        if (typeof repository.createAuditEntry === "function") {
+          await repository.createAuditEntry({
+            id: newId("audit"),
+            actorId: user.id,
+            action: "UPLOAD",
+            entityType: "candidate_document",
+            entityId: document.id,
+            details: { candidateId, title: document.title },
+            createdAt: nowIso(),
+          });
+        }
+        const fresh = await repository.read();
+        const updated = fresh.candidates.find((item) => item.id === candidateId);
+        return { candidate: expandCandidates(fresh, [updated])[0], document };
+      }
+
+      return repository.transaction(async (db) => {
+        const candidate = db.candidates.find((item) => item.id === candidateId);
+        if (!candidate) throw new Error("Candidate not found");
+        if (user.role !== "owner" && user.role !== "lead" && candidate.scoutId !== user.id) {
+          throw new Error("Forbidden");
+        }
+        const document = {
+          id: newId("doc"),
+          candidateId,
+          title: payload.title || "Новый документ",
+          type: payload.type || "link",
+          url: payload.url || "",
+          note: payload.note || "",
+          uploadedByUserId: user.id,
+          createdAt: nowIso(),
+        };
+        candidate.documents = Array.isArray(candidate.documents) ? candidate.documents : [];
+        candidate.documents.unshift(document);
+        createAudit(db, user.id, "UPLOAD", "candidate_document", document.id, { candidateId, title: document.title });
+        return { candidate: expandCandidates(db, [candidate])[0], document };
+      });
+    },
+
+    async removeCandidateDocument(user, candidateId, documentId) {
+      if (typeof repository.deleteCandidateDocument === "function") {
+        const currentDb = await repository.read();
+        const candidate = currentDb.candidates.find((item) => item.id === candidateId);
+        if (!candidate) throw new Error("Candidate not found");
+        if (user.role !== "owner" && user.role !== "lead" && candidate.scoutId !== user.id) {
+          throw new Error("Forbidden");
+        }
+        const document = (candidate.documents || []).find((item) => item.id === documentId);
+        if (!document) throw new Error("Document not found");
+        await repository.deleteCandidateDocument(documentId);
+        await cleanupUploadedFile(document.url);
+        if (typeof repository.createAuditEntry === "function") {
+          await repository.createAuditEntry({
+            id: newId("audit"),
+            actorId: user.id,
+            action: "DELETE",
+            entityType: "candidate_document",
+            entityId: document.id,
+            details: { candidateId, title: document.title },
+            createdAt: nowIso(),
+          });
+        }
+        const fresh = await repository.read();
+        const updated = fresh.candidates.find((item) => item.id === candidateId);
+        return { candidate: expandCandidates(fresh, [updated])[0], documentId };
+      }
+
+      return repository.transaction(async (db) => {
+        const candidate = db.candidates.find((item) => item.id === candidateId);
+        if (!candidate) throw new Error("Candidate not found");
+        if (user.role !== "owner" && user.role !== "lead" && candidate.scoutId !== user.id) {
+          throw new Error("Forbidden");
+        }
+        const documents = Array.isArray(candidate.documents) ? candidate.documents : [];
+        const document = documents.find((item) => item.id === documentId);
+        if (!document) throw new Error("Document not found");
+        candidate.documents = documents.filter((item) => item.id !== documentId);
+        await cleanupUploadedFile(document.url);
+        createAudit(db, user.id, "DELETE", "candidate_document", document.id, { candidateId, title: document.title });
+        return { candidate: expandCandidates(db, [candidate])[0], documentId };
+      });
+    },
+
+    async addCandidateComment(user, candidateId, payload = {}) {
+      if (typeof repository.insertCandidateComment === "function") {
+        const currentDb = await repository.read();
+        const candidate = currentDb.candidates.find((item) => item.id === candidateId);
+        if (!candidate) throw new Error("Candidate not found");
+        if (user.role !== "owner" && user.role !== "lead" && candidate.scoutId !== user.id) {
+          throw new Error("Forbidden");
+        }
+        const comment = {
+          id: newId("candidate-comment"),
+          candidateId,
+          authorId: user.id,
+          authorName: user.name,
+          body: payload.body || "",
+          createdAt: nowIso(),
+        };
+        await repository.insertCandidateComment(comment);
+        if (typeof repository.createAuditEntry === "function") {
+          await repository.createAuditEntry({
+            id: newId("audit"),
+            actorId: user.id,
+            action: "COMMENT",
+            entityType: "candidate",
+            entityId: candidateId,
+            details: { commentId: comment.id },
+            createdAt: nowIso(),
+          });
+        }
+        const fresh = await repository.read();
+        const updated = fresh.candidates.find((item) => item.id === candidateId);
+        return { candidate: expandCandidates(fresh, [updated])[0], comment };
+      }
+
+      return repository.transaction(async (db) => {
+        const candidate = db.candidates.find((item) => item.id === candidateId);
+        if (!candidate) throw new Error("Candidate not found");
+        if (user.role !== "owner" && user.role !== "lead" && candidate.scoutId !== user.id) {
+          throw new Error("Forbidden");
+        }
+        const comment = {
+          id: newId("candidate-comment"),
+          candidateId,
+          authorId: user.id,
+          authorName: user.name,
+          body: payload.body || "",
+          createdAt: nowIso(),
+        };
+        candidate.comments = Array.isArray(candidate.comments) ? candidate.comments : [];
+        candidate.comments.push(comment);
+        createAudit(db, user.id, "COMMENT", "candidate", candidate.id, { commentId: comment.id });
+        return { candidate: expandCandidates(db, [candidate])[0], comment };
       });
     },
 
@@ -412,6 +765,7 @@ function createPlatformService(repository) {
             createdAt: nowIso(),
           });
         }
+        await ensurePayoutsSynced();
         const fresh = await repository.read();
         const updated = fresh.offers.find((item) => item.id === offerId);
         return { offer: expandOffers(fresh, [updated])[0] };
@@ -428,6 +782,7 @@ function createPlatformService(repository) {
           offer.assignedScoutIds = payload.assignedScoutIds;
         }
         createAudit(db, user.id, "UPDATE", "offer", offer.id, { title: offer.title });
+        syncPayoutsInDb(db);
         return { offer: expandOffers(db, [offer])[0] };
       });
     },
@@ -660,6 +1015,7 @@ function createPlatformService(repository) {
         target.teamId = payload.teamId ?? target.teamId;
         target.subscription = payload.subscription ?? target.subscription;
         target.payoutBoost = payload.payoutBoost ?? target.payoutBoost;
+        target.permissionsOverride = payload.permissionsOverride ?? target.permissionsOverride ?? {};
 
         if (previousTeamId !== target.teamId) {
           db.teams.forEach((team) => {
@@ -672,7 +1028,100 @@ function createPlatformService(repository) {
         }
 
         createAudit(db, actor.id, "UPDATE", "user", target.id, { role: target.role, teamId: target.teamId });
+        syncPayoutsInDb(db);
         return { user: safeUser(target) };
+      });
+    },
+
+    async updatePayout(user, payoutId, payload = {}) {
+      if (user.role !== "owner") throw new Error("Forbidden");
+
+      if (typeof repository.patchPayoutStatus === "function") {
+        const status = payload.status;
+        if (!["pending", "approved", "paid"].includes(status)) throw new Error("Invalid payout status");
+        const timestamp = nowIso();
+        const updated = await repository.patchPayoutStatus(payoutId, {
+          status,
+          approvedAt: status === "approved" || status === "paid" ? timestamp : null,
+          paidAt: status === "paid" ? timestamp : null,
+          updatedAt: timestamp,
+        });
+        if (!updated) throw new Error("Payout not found");
+        if (typeof repository.createAuditEntry === "function") {
+          await repository.createAuditEntry({
+            id: newId("audit"),
+            actorId: user.id,
+            action: "UPDATE",
+            entityType: "payout",
+            entityId: payoutId,
+            details: { status },
+            createdAt: nowIso(),
+          });
+        }
+        const fresh = await repository.read();
+        return { payout: fresh.payouts.find((item) => item.id === payoutId) || updated };
+      }
+
+      return repository.transaction(async (db) => {
+        const payout = (db.payouts || []).find((item) => item.id === payoutId);
+        if (!payout) throw new Error("Payout not found");
+        if (!["pending", "approved", "paid"].includes(payload.status)) throw new Error("Invalid payout status");
+        const timestamp = nowIso();
+        payout.status = payload.status;
+        payout.approvedAt = payload.status === "approved" || payload.status === "paid" ? timestamp : null;
+        payout.paidAt = payload.status === "paid" ? timestamp : null;
+        payout.updatedAt = timestamp;
+        createAudit(db, user.id, "UPDATE", "payout", payout.id, { status: payout.status });
+        return { payout };
+      });
+    },
+
+    async updatePayoutBatch(user, payload = {}) {
+      if (user.role !== "owner") throw new Error("Forbidden");
+      const payoutIds = Array.isArray(payload.payoutIds) ? payload.payoutIds.filter(Boolean) : [];
+      if (!payoutIds.length) throw new Error("Payout ids are required");
+      const status = payload.status;
+      if (!["pending", "approved", "paid"].includes(status)) throw new Error("Invalid payout status");
+
+      if (typeof repository.patchPayoutStatus === "function") {
+        const updated = [];
+        for (const payoutId of payoutIds) {
+          const timestamp = nowIso();
+          const payout = await repository.patchPayoutStatus(payoutId, {
+            status,
+            approvedAt: status === "approved" || status === "paid" ? timestamp : null,
+            paidAt: status === "paid" ? timestamp : null,
+            updatedAt: timestamp,
+          });
+          if (payout) {
+            updated.push(payout);
+            if (typeof repository.createAuditEntry === "function") {
+              await repository.createAuditEntry({
+                id: newId("audit"),
+                actorId: user.id,
+                action: "BATCH_UPDATE",
+                entityType: "payout",
+                entityId: payout.id,
+                details: { status, batch: true },
+                createdAt: nowIso(),
+              });
+            }
+          }
+        }
+        return { ok: true, updatedCount: updated.length, payouts: updated };
+      }
+
+      return repository.transaction(async (db) => {
+        const timestamp = nowIso();
+        const updated = (db.payouts || []).filter((item) => payoutIds.includes(item.id));
+        updated.forEach((payout) => {
+          payout.status = status;
+          payout.approvedAt = status === "approved" || status === "paid" ? timestamp : null;
+          payout.paidAt = status === "paid" ? timestamp : null;
+          payout.updatedAt = timestamp;
+          createAudit(db, user.id, "BATCH_UPDATE", "payout", payout.id, { status, batch: true });
+        });
+        return { ok: true, updatedCount: updated.length, payouts: updated };
       });
     },
 
@@ -681,10 +1130,13 @@ function createPlatformService(repository) {
         const post = {
           id: newId("post"),
           type: payload.type === "news" && user.role !== "owner" ? "forum" : (payload.type || "forum"),
+          category: payload.category || (payload.type === "news" ? "announcements" : "general"),
+          pinned: Boolean(payload.pinned && user.role === "owner"),
           authorId: user.id,
           authorName: user.name,
           title: payload.title || "Новый пост",
           body: payload.body || "",
+          comments: [],
           createdAt: nowIso(),
         };
         await repository.insertPost(post);
@@ -706,15 +1158,64 @@ function createPlatformService(repository) {
         const post = {
           id: newId("post"),
           type: payload.type === "news" && user.role !== "owner" ? "forum" : (payload.type || "forum"),
+          category: payload.category || (payload.type === "news" ? "announcements" : "general"),
+          pinned: Boolean(payload.pinned && user.role === "owner"),
           authorId: user.id,
           authorName: user.name,
           title: payload.title || "Новый пост",
           body: payload.body || "",
+          comments: [],
           createdAt: nowIso(),
         };
         db.posts.unshift(post);
         createAudit(db, user.id, "CREATE", "post", post.id, { type: post.type });
         return { post };
+      });
+    },
+
+    async addPostComment(user, postId, payload = {}) {
+      if (typeof repository.insertPostComment === "function") {
+        const currentDb = await repository.read();
+        const post = currentDb.posts.find((item) => item.id === postId);
+        if (!post) throw new Error("Post not found");
+        const comment = {
+          id: newId("comment"),
+          postId,
+          authorId: user.id,
+          authorName: user.name,
+          body: payload.body || "",
+          createdAt: nowIso(),
+        };
+        await repository.insertPostComment(comment);
+        if (typeof repository.createAuditEntry === "function") {
+          await repository.createAuditEntry({
+            id: newId("audit"),
+            actorId: user.id,
+            action: "COMMENT",
+            entityType: "post",
+            entityId: postId,
+            details: { commentId: comment.id },
+            createdAt: nowIso(),
+          });
+        }
+        return { comment };
+      }
+
+      return repository.transaction(async (db) => {
+        const post = db.posts.find((item) => item.id === postId);
+        if (!post) throw new Error("Post not found");
+        const comment = {
+          id: newId("comment"),
+          postId,
+          authorId: user.id,
+          authorName: user.name,
+          body: payload.body || "",
+          createdAt: nowIso(),
+        };
+        post.comments = Array.isArray(post.comments) ? post.comments : [];
+        post.comments.push(comment);
+        createAudit(db, user.id, "COMMENT", "post", postId, { commentId: comment.id });
+        return { comment };
       });
     },
 

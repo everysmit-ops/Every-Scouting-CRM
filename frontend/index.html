@@ -185,6 +185,7 @@
 
             <section class="card content-panel hidden" id="workspaceApp">
               <div class="workspace-controls">
+                <div class="live-sync-chip" id="liveSyncBadge">Live sync: off</div>
                 <label>
                   Язык интерфейса
                   <select id="languageSelect">
@@ -200,10 +201,14 @@
               <section class="main-grid">
                 <aside class="card sidebar-nav">
                   <button class="nav-item active" data-view="dashboard">Обзор</button>
+                  <button class="nav-item" data-view="notifications">Уведомления</button>
                   <button class="nav-item" data-view="candidates">Кандидаты</button>
+                  <button class="nav-item" data-view="calendar">Календарь</button>
                   <button class="nav-item" data-view="offers">Офферы</button>
                   <button class="nav-item" data-view="teams">Команды</button>
                   <button class="nav-item" data-view="tasks">Задачи</button>
+                  <button class="nav-item" data-view="finance">Финансы</button>
+                  <button class="nav-item" data-view="analytics">Аналитика</button>
                   <button class="nav-item" data-view="training">Обучение</button>
                   <button class="nav-item" data-view="social">Соцпространство</button>
                   <button class="nav-item" data-view="profile">Профиль</button>
@@ -212,10 +217,14 @@
 
                 <section class="content-stack">
                   <article class="card content-panel" id="view-dashboard"></article>
+                  <article class="card content-panel hidden" id="view-notifications"></article>
                   <article class="card content-panel hidden" id="view-candidates"></article>
+                  <article class="card content-panel hidden" id="view-calendar"></article>
                   <article class="card content-panel hidden" id="view-offers"></article>
                   <article class="card content-panel hidden" id="view-teams"></article>
                   <article class="card content-panel hidden" id="view-tasks"></article>
+                  <article class="card content-panel hidden" id="view-finance"></article>
+                  <article class="card content-panel hidden" id="view-analytics"></article>
                   <article class="card content-panel hidden" id="view-training"></article>
                   <article class="card content-panel hidden" id="view-social"></article>
                   <article class="card content-panel hidden" id="view-profile"></article>
@@ -227,6 +236,9 @@
         </section>
       </main>
     </div>
+
+    <div class="doc-preview-overlay hidden" id="docPreviewOverlay"></div>
+    <div class="toast-stack" id="toastStack"></div>
 
     <script src="./app.js"></script>
   </body>

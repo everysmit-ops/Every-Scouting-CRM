@@ -1,13 +1,13 @@
 const fs = require("fs");
 const path = require("path");
-const { MIME_TYPES, FRONTEND_ROOT } = require("./config");
+const { MIME_TYPES, FRONTEND_ROOT, UPLOADS_ROOT } = require("./config");
 
 function sendJson(response, statusCode, data) {
   response.writeHead(statusCode, {
     "Content-Type": MIME_TYPES[".json"],
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
   });
   response.end(JSON.stringify(data, null, 2));
 }
@@ -29,10 +29,13 @@ function parseBody(request) {
 }
 
 function serveStatic(urlPath, response) {
+  const isUpload = urlPath.startsWith("/uploads/");
+  const baseRoot = isUpload ? UPLOADS_ROOT : FRONTEND_ROOT;
   const requestedPath = urlPath === "/" ? "/index.html" : urlPath;
-  const filePath = path.join(FRONTEND_ROOT, requestedPath);
+  const relativePath = isUpload ? requestedPath.replace("/uploads", "") : requestedPath;
+  const filePath = path.join(baseRoot, relativePath);
 
-  if (!filePath.startsWith(FRONTEND_ROOT)) {
+  if (!filePath.startsWith(baseRoot)) {
     sendJson(response, 403, { error: "Forbidden" });
     return;
   }

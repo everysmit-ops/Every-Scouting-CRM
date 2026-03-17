@@ -1,4 +1,4 @@
-const { ROLE_LABELS } = require("./config");
+const { ROLE_LABELS, PERMISSION_LABELS } = require("./config");
 const { nowIso, newId, safeUser } = require("./auth");
 
 function createAudit(db, actorId, action, entityType, entityId, details) {
@@ -57,6 +57,12 @@ function visibleChats(db, user) {
 
 function visibleNotifications(db, user) {
   return db.notifications.filter((notification) => !notification.userIds || notification.userIds.includes(user.id)).slice(0, 12);
+}
+
+function visiblePayouts(db, user) {
+  if (user.role === "owner") return db.payouts || [];
+  if (user.role === "lead") return (db.payouts || []).filter((payout) => payout.teamId === user.teamId);
+  return (db.payouts || []).filter((payout) => payout.scoutId === user.id);
 }
 
 function teamStats(db, user) {
@@ -130,6 +136,9 @@ function getBootstrap(db, user) {
   const posts = db.posts.slice().sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   const publicApplications = user.role === "owner" ? db.publicApplications : [];
   const notifications = visibleNotifications(db, user);
+  const payouts = visiblePayouts(db, user)
+    .slice()
+    .sort((left, right) => String(right.createdAt).localeCompare(String(left.createdAt)));
   const scoreboard = db.users
     .filter((person) => ["lead", "scout", "referral"].includes(person.role))
     .map((person) => {
@@ -152,6 +161,7 @@ function getBootstrap(db, user) {
     user: userView,
     metadata: {
       roles: ROLE_LABELS,
+      permissionLabels: PERMISSION_LABELS,
       permissions: userView.permissions,
       companyName: db.company.name,
       locale: db.company.locale,
@@ -177,6 +187,7 @@ function getBootstrap(db, user) {
     posts,
     publicApplications,
     notifications,
+    payouts,
     scoreboard,
     auditLog: db.auditLog.slice(0, 10),
     users: user.role === "owner" ? db.users.map((item) => safeUser(item)) : [],

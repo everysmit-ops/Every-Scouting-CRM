@@ -135,6 +135,28 @@ CREATE TABLE training_assignments (
   PRIMARY KEY (training_id, user_id)
 );
 
+CREATE TABLE chats (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  team_id TEXT REFERENCES teams(id),
+  is_global BOOLEAN NOT NULL DEFAULT FALSE
+);
+
+CREATE TABLE chat_participants (
+  chat_id TEXT REFERENCES chats(id) ON DELETE CASCADE,
+  user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
+  PRIMARY KEY (chat_id, user_id)
+);
+
+CREATE TABLE chat_messages (
+  id TEXT PRIMARY KEY,
+  chat_id TEXT NOT NULL REFERENCES chats(id) ON DELETE CASCADE,
+  author_id TEXT REFERENCES users(id),
+  author_name TEXT NOT NULL,
+  body TEXT NOT NULL,
+  sent_at TIMESTAMPTZ NOT NULL
+);
+
 CREATE TABLE posts (
   id TEXT PRIMARY KEY,
   type TEXT NOT NULL,
@@ -156,28 +178,6 @@ CREATE TABLE post_comments (
   created_at TIMESTAMPTZ NOT NULL
 );
 
-CREATE TABLE chats (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  team_id TEXT REFERENCES teams(id),
-  is_global BOOLEAN NOT NULL DEFAULT FALSE
-);
-
-CREATE TABLE chat_participants (
-  chat_id TEXT REFERENCES chats(id) ON DELETE CASCADE,
-  user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
-  PRIMARY KEY (chat_id, user_id)
-);
-
-CREATE TABLE chat_messages (
-  id TEXT PRIMARY KEY,
-  chat_id TEXT REFERENCES chats(id) ON DELETE CASCADE,
-  author_id TEXT REFERENCES users(id),
-  author_name TEXT NOT NULL,
-  body TEXT NOT NULL,
-  sent_at TIMESTAMPTZ NOT NULL
-);
-
 CREATE TABLE public_applications (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -186,13 +186,6 @@ CREATE TABLE public_applications (
   languages TEXT NOT NULL,
   motivation TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'new',
-  created_at TIMESTAMPTZ NOT NULL
-);
-
-CREATE TABLE sessions (
-  id TEXT PRIMARY KEY,
-  user_id TEXT REFERENCES users(id) ON DELETE CASCADE,
-  token TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL
 );
 
@@ -216,5 +209,12 @@ CREATE TABLE audit_log (
   entity_type TEXT NOT NULL,
   entity_id TEXT NOT NULL,
   details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE sessions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL
 );

@@ -61,8 +61,10 @@ node server.js
 /server.js
 /package.json
 /.env.example
+/.env.production.example
 /Dockerfile
 /render.yaml
+/DEPLOYMENT.md
 ```
 
 ## Что готово для следующего этапа
@@ -80,8 +82,12 @@ npm run check
 npm run export:seed
 npm run db:check
 npm run db:init
+npm run db:migrate
+npm run db:status
+npm run db:bootstrap
 npm run db:reset
 npm run smoke:health
+npm run smoke:platform
 ```
 
 ## PostgreSQL-подготовка
@@ -108,7 +114,7 @@ npm run db:check
 npm run export:seed
 ```
 
-5. Примените схему и seed:
+5. Примените миграции и seed:
 
 ```bash
 npm run db:init
@@ -142,6 +148,32 @@ DB_PROVIDER=postgres
   `DB_PROVIDER=postgres`
   `POSTGRES_SSL=true`
   `POSTGRES_URL=...`
+
+## Production DB flow
+
+Для более безопасной выкладки:
+
+1. Проверить подключение:
+```bash
+npm run db:check
+```
+2. Посмотреть статус миграций:
+```bash
+npm run db:status
+```
+3. Применить только миграции:
+```bash
+npm run db:migrate
+```
+4. Если база пустая, выполнить bootstrap:
+```bash
+npm run db:bootstrap
+```
+
+`db:bootstrap` применяет миграции и заливает seed только если в базе еще нет пользователей.
+
+Подробный production rollout:
+- [DEPLOYMENT.md](/Users/sleemy/Documents/Playground/DEPLOYMENT.md)
 
 ## Следующий продакшен-этап
 

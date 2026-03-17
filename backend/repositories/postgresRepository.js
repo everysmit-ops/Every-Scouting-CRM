@@ -1,6 +1,6 @@
 const { getPool } = require("../lib/postgres");
 const { normalizeDb, safeUser } = require("../lib/auth");
-const { ROLE_LABELS } = require("../lib/config");
+const { ROLE_LABELS, PERMISSION_LABELS } = require("../lib/config");
 const { isKpiQualified } = require("../lib/domain");
 
 function mapRowsById(rows) {
@@ -13,6 +13,91 @@ function textOrNull(value) {
 
 function createPostgresRepository() {
   const pool = getPool();
+  let payoutsTableReady = false;
+  let socialSchemaReady = false;
+  let candidateDocsReady = false;
+  let candidateCommentsReady = false;
+
+  async function ensurePayoutsTable() {
+    if (payoutsTableReady) return;
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS payouts (
+        id TEXT PRIMARY KEY,
+        candidate_id TEXT NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
+        scout_id TEXT REFERENCES users(id),
+        team_id TEXT REFERENCES teams(id),
+        offer_id TEXT REFERENCES offers(id),
+        base_amount INTEGER NOT NULL DEFAULT 0,
+        boost_percent INTEGER NOT NULL DEFAULT 0,
+        boost_amount INTEGER NOT NULL DEFAULT 0,
+        final_amount INTEGER NOT NULL DEFAULT 0,
+        referral_percent INTEGER NOT NULL DEFAULT 0,
+        referral_amount INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'pending',
+        created_at TIMESTAMPTZ NOT NULL,
+        approved_at TIMESTAMPTZ,
+        paid_at TIMESTAMPTZ,
+        updated_at TIMESTAMPTZ NOT NULL,
+        UNIQUE (candidate_id)
+      )
+    `);
+    payoutsTableReady = true;
+  }
+
+  async function ensureSocialSchema() {
+    if (socialSchemaReady) return;
+    await pool.query("ALTER TABLE posts ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'general'");
+    await pool.query("ALTER TABLE posts ADD COLUMN IF NOT EXISTS pinned BOOLEAN NOT NULL DEFAULT FALSE");
+    await pool.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS permissions_override JSONB NOT NULL DEFAULT '{}'::jsonb");
+    await pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS interview_at TIMESTAMPTZ");
+    await pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS interview_format TEXT");
+    await pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS interviewer_name TEXT");
+    await pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS interview_status TEXT NOT NULL DEFAULT 'unscheduled'");
+    await pool.query("ALTER TABLE candidates ADD COLUMN IF NOT EXISTS interview_notes TEXT NOT NULL DEFAULT ''");
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS post_comments (
+        id TEXT PRIMARY KEY,
+        post_id TEXT NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
+        author_id TEXT REFERENCES users(id),
+        author_name TEXT NOT NULL,
+        body TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL
+      )
+    `);
+    socialSchemaReady = true;
+  }
+
+  async function ensureCandidateDocsSchema() {
+    if (candidateDocsReady) return;
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS candidate_documents (
+        id TEXT PRIMARY KEY,
+        candidate_id TEXT NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
+        title TEXT NOT NULL,
+        type TEXT NOT NULL DEFAULT 'link',
+        url TEXT,
+        note TEXT NOT NULL DEFAULT '',
+        uploaded_by_user_id TEXT REFERENCES users(id),
+        created_at TIMESTAMPTZ NOT NULL
+      )
+    `);
+    candidateDocsReady = true;
+  }
+
+  async function ensureCandidateCommentsSchema() {
+    if (candidateCommentsReady) return;
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS candidate_comments (
+        id TEXT PRIMARY KEY,
+        candidate_id TEXT NOT NULL REFERENCES candidates(id) ON DELETE CASCADE,
+        author_id TEXT REFERENCES users(id),
+        author_name TEXT NOT NULL,
+        body TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL
+      )
+    `);
+    candidateCommentsReady = true;
+  }
 
   async function queryOne(text, params = []) {
     const result = await pool.query(text, params);
@@ -32,10 +117,13 @@ function createPostgresRepository() {
       offersRes,
       offerAssignmentsRes,
       candidatesRes,
+      candidateDocumentsRes,
+      candidateCommentsRes,
       tasksRes,
       trainingsRes,
       trainingAssignmentsRes,
       postsRes,
+      postCommentsRes,
       chatsRes,
       chatParticipantsRes,
       chatMessagesRes,
@@ -44,6 +132,7 @@ function createPostgresRepository() {
       notificationUsersRes,
       auditLogRes,
       sessionsRes,
+      payoutsRes,
     ] = await Promise.all([
       client.query("SELECT * FROM teams"),
       client.query("SELECT * FROM team_members"),
@@ -51,10 +140,25 @@ function createPostgresRepository() {
       client.query("SELECT * FROM offers"),
       client.query("SELECT * FROM offer_assignments"),
       client.query("SELECT * FROM candidates"),
+      (async () => {
+        await ensureCandidateDocsSchema();
+        return client.query("SELECT * FROM candidate_documents ORDER BY created_at DESC");
+      })(),
+      (async () => {
+        await ensureCandidateCommentsSchema();
+        return client.query("SELECT * FROM candidate_comments ORDER BY created_at ASC");
+      })(),
       client.query("SELECT * FROM tasks"),
       client.query("SELECT * FROM trainings"),
       client.query("SELECT * FROM training_assignments"),
-      client.query("SELECT * FROM posts"),
+      (async () => {
+        await ensureSocialSchema();
+        return client.query("SELECT * FROM posts");
+      })(),
+      (async () => {
+        await ensureSocialSchema();
+        return client.query("SELECT * FROM post_comments ORDER BY created_at ASC");
+      })(),
       client.query("SELECT * FROM chats"),
       client.query("SELECT * FROM chat_participants"),
       client.query("SELECT * FROM chat_messages ORDER BY sent_at ASC"),
@@ -63,6 +167,10 @@ function createPostgresRepository() {
       client.query("SELECT * FROM notification_users"),
       client.query("SELECT * FROM audit_log ORDER BY created_at DESC"),
       client.query("SELECT * FROM sessions"),
+      (async () => {
+        await ensurePayoutsTable();
+        return client.query("SELECT * FROM payouts ORDER BY created_at DESC");
+      })(),
     ]);
 
     const membersByTeam = new Map();
@@ -88,6 +196,33 @@ function createPostgresRepository() {
       }
     });
 
+    const documentsByCandidate = new Map();
+    candidateDocumentsRes.rows.forEach((row) => {
+      if (!documentsByCandidate.has(row.candidate_id)) documentsByCandidate.set(row.candidate_id, []);
+      documentsByCandidate.get(row.candidate_id).push({
+        id: row.id,
+        candidateId: row.candidate_id,
+        title: row.title,
+        type: row.type,
+        url: row.url,
+        note: row.note,
+        uploadedByUserId: row.uploaded_by_user_id,
+        createdAt: row.created_at?.toISOString?.() || row.created_at,
+      });
+    });
+    const commentsByCandidate = new Map();
+    candidateCommentsRes.rows.forEach((row) => {
+      if (!commentsByCandidate.has(row.candidate_id)) commentsByCandidate.set(row.candidate_id, []);
+      commentsByCandidate.get(row.candidate_id).push({
+        id: row.id,
+        candidateId: row.candidate_id,
+        authorId: row.author_id,
+        authorName: row.author_name,
+        body: row.body,
+        createdAt: row.created_at?.toISOString?.() || row.created_at,
+      });
+    });
+
     const participantsByChat = new Map();
     chatParticipantsRes.rows.forEach((row) => {
       if (!participantsByChat.has(row.chat_id)) participantsByChat.set(row.chat_id, []);
@@ -104,6 +239,19 @@ function createPostgresRepository() {
         text: row.body,
         time: new Date(row.sent_at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }),
         sentAt: row.sent_at.toISOString ? row.sent_at.toISOString() : row.sent_at,
+      });
+    });
+
+    const commentsByPost = new Map();
+    postCommentsRes.rows.forEach((row) => {
+      if (!commentsByPost.has(row.post_id)) commentsByPost.set(row.post_id, []);
+      commentsByPost.get(row.post_id).push({
+        id: row.id,
+        postId: row.post_id,
+        authorId: row.author_id,
+        authorName: row.author_name,
+        body: row.body,
+        createdAt: row.created_at?.toISOString?.() || row.created_at,
       });
     });
 
@@ -144,6 +292,7 @@ function createPostgresRepository() {
         referralIncomePercent: row.referral_income_percent,
         payoutBoost: row.payout_boost,
         locale: row.locale,
+        permissionsOverride: row.permissions_override || {},
       })),
       offers: offersRes.rows.map((row) => ({
         id: row.id,
@@ -163,9 +312,16 @@ function createPostgresRepository() {
         teamId: row.team_id,
         status: row.status,
         location: row.location,
+        interviewAt: row.interview_at?.toISOString?.() || row.interview_at,
+        interviewFormat: row.interview_format || "video",
+        interviewerName: row.interviewer_name || "",
+        interviewStatus: row.interview_status || (row.interview_passed ? "completed" : row.interview_at ? "scheduled" : "unscheduled"),
+        interviewNotes: row.interview_notes || "",
         interviewPassed: row.interview_passed,
         registrationPassed: row.registration_passed,
         shiftsCompleted: row.shifts_completed,
+        documents: documentsByCandidate.get(row.id) || [],
+        comments: commentsByCandidate.get(row.id) || [],
         notes: row.notes,
         createdAt: row.created_at?.toISOString?.() || row.created_at,
       })),
@@ -193,10 +349,13 @@ function createPostgresRepository() {
       posts: postsRes.rows.map((row) => ({
         id: row.id,
         type: row.type,
+        category: row.category || "general",
+        pinned: !!row.pinned,
         authorId: row.author_id,
         authorName: row.author_name,
         title: row.title,
         body: row.body,
+        comments: commentsByPost.get(row.id) || [],
         createdAt: row.created_at?.toISOString?.() || row.created_at,
       })),
       chats: chatsRes.rows.map((row) => ({
@@ -239,6 +398,24 @@ function createPostgresRepository() {
         token: row.token,
         createdAt: row.created_at?.toISOString?.() || row.created_at,
       })),
+      payouts: payoutsRes.rows.map((row) => ({
+        id: row.id,
+        candidateId: row.candidate_id,
+        scoutId: row.scout_id,
+        teamId: row.team_id,
+        offerId: row.offer_id,
+        baseAmount: row.base_amount,
+        boostPercent: row.boost_percent,
+        boostAmount: row.boost_amount,
+        finalAmount: row.final_amount,
+        referralPercent: row.referral_percent,
+        referralAmount: row.referral_amount,
+        status: row.status,
+        createdAt: row.created_at?.toISOString?.() || row.created_at,
+        approvedAt: row.approved_at?.toISOString?.() || row.approved_at,
+        paidAt: row.paid_at?.toISOString?.() || row.paid_at,
+        updatedAt: row.updated_at?.toISOString?.() || row.updated_at,
+      })),
     };
 
     normalizeDb(db);
@@ -253,8 +430,11 @@ function createPostgresRepository() {
       offersRes,
       offerAssignmentsRes,
       postsRes,
+      postCommentsRes,
       trainingsRes,
       trainingAssignmentsRes,
+      candidateDocumentsRes,
+      candidateCommentsRes,
       notificationsRes,
       notificationUsersRes,
       auditLogRes,
@@ -262,15 +442,31 @@ function createPostgresRepository() {
       chatParticipantsRes,
       chatMessagesRes,
       publicApplicationsRes,
+      payoutsRes,
     ] = await Promise.all([
       client.query("SELECT * FROM users"),
       client.query("SELECT * FROM teams"),
       client.query("SELECT * FROM team_members"),
       client.query("SELECT * FROM offers"),
       client.query("SELECT * FROM offer_assignments"),
-      client.query("SELECT * FROM posts ORDER BY created_at DESC"),
+      (async () => {
+        await ensureSocialSchema();
+        return client.query("SELECT * FROM posts ORDER BY pinned DESC, created_at DESC");
+      })(),
+      (async () => {
+        await ensureSocialSchema();
+        return client.query("SELECT * FROM post_comments ORDER BY created_at ASC");
+      })(),
       client.query("SELECT * FROM trainings"),
       client.query("SELECT * FROM training_assignments"),
+      (async () => {
+        await ensureCandidateDocsSchema();
+        return client.query("SELECT * FROM candidate_documents ORDER BY created_at DESC");
+      })(),
+      (async () => {
+        await ensureCandidateCommentsSchema();
+        return client.query("SELECT * FROM candidate_comments ORDER BY created_at ASC");
+      })(),
       client.query(
         `SELECT n.* FROM notifications n
          LEFT JOIN notification_users nu ON nu.notification_id = n.id
@@ -295,6 +491,17 @@ function createPostgresRepository() {
       user.role === "owner"
         ? client.query("SELECT * FROM public_applications ORDER BY created_at DESC")
         : Promise.resolve({ rows: [] }),
+      (async () => {
+        await ensurePayoutsTable();
+        return client.query(
+          user.role === "owner"
+            ? "SELECT * FROM payouts ORDER BY created_at DESC"
+            : user.role === "lead"
+              ? "SELECT * FROM payouts WHERE team_id = $1 ORDER BY created_at DESC"
+              : "SELECT * FROM payouts WHERE scout_id = $1 ORDER BY created_at DESC",
+          user.role === "owner" ? [] : [user.role === "lead" ? user.teamId : user.id],
+        );
+      })(),
     ]);
 
     const visibleCandidatesRes = await client.query(
@@ -303,7 +510,7 @@ function createPostgresRepository() {
         : user.role === "lead"
           ? "SELECT * FROM candidates WHERE team_id = $1"
           : "SELECT * FROM candidates WHERE scout_id = $1",
-      [user.role === "lead" ? user.teamId : user.id],
+      user.role === "owner" ? [] : [user.role === "lead" ? user.teamId : user.id],
     );
 
     const visibleTasksRes = await client.query(
@@ -354,6 +561,34 @@ function createPostgresRepository() {
       }
     });
 
+    const commentsByPost = new Map();
+    postCommentsRes.rows.forEach((row) => {
+      if (!commentsByPost.has(row.post_id)) commentsByPost.set(row.post_id, []);
+      commentsByPost.get(row.post_id).push({
+        id: row.id,
+        postId: row.post_id,
+        authorId: row.author_id,
+        authorName: row.author_name,
+        body: row.body,
+        createdAt: row.created_at?.toISOString?.() || row.created_at,
+      });
+    });
+
+    const documentsByCandidate = new Map();
+    candidateDocumentsRes.rows.forEach((row) => {
+      if (!documentsByCandidate.has(row.candidate_id)) documentsByCandidate.set(row.candidate_id, []);
+      documentsByCandidate.get(row.candidate_id).push({
+        id: row.id,
+        candidateId: row.candidate_id,
+        title: row.title,
+        type: row.type,
+        url: row.url,
+        note: row.note,
+        uploadedByUserId: row.uploaded_by_user_id,
+        createdAt: row.created_at?.toISOString?.() || row.created_at,
+      });
+    });
+
     const participantsByChat = new Map();
     chatParticipantsRes.rows.forEach((row) => {
       if (!participantsByChat.has(row.chat_id)) participantsByChat.set(row.chat_id, []);
@@ -399,6 +634,7 @@ function createPostgresRepository() {
       referralIncomePercent: row.referral_income_percent,
       payoutBoost: row.payout_boost,
       locale: row.locale,
+      permissionsOverride: row.permissions_override || {},
     }));
 
     const teams = teamsRes.rows.map((row) => ({
@@ -433,9 +669,16 @@ function createPostgresRepository() {
       teamId: row.team_id,
       status: row.status,
       location: row.location,
+      interviewAt: row.interview_at?.toISOString?.() || row.interview_at,
+      interviewFormat: row.interview_format || "video",
+      interviewerName: row.interviewer_name || "",
+      interviewStatus: row.interview_status || (row.interview_passed ? "completed" : row.interview_at ? "scheduled" : "unscheduled"),
+      interviewNotes: row.interview_notes || "",
       interviewPassed: row.interview_passed,
       registrationPassed: row.registration_passed,
       shiftsCompleted: row.shifts_completed,
+      documents: documentsByCandidate.get(row.id) || [],
+      comments: commentsByCandidate.get(row.id) || [],
       notes: row.notes,
       createdAt: row.created_at?.toISOString?.() || row.created_at,
     }));
@@ -448,9 +691,16 @@ function createPostgresRepository() {
       teamId: row.team_id,
       status: row.status,
       location: row.location,
+      interviewAt: row.interview_at?.toISOString?.() || row.interview_at,
+      interviewFormat: row.interview_format || "video",
+      interviewerName: row.interviewer_name || "",
+      interviewStatus: row.interview_status || (row.interview_passed ? "completed" : row.interview_at ? "scheduled" : "unscheduled"),
+      interviewNotes: row.interview_notes || "",
       interviewPassed: row.interview_passed,
       registrationPassed: row.registration_passed,
       shiftsCompleted: row.shifts_completed,
+      documents: documentsByCandidate.get(row.id) || [],
+      comments: commentsByCandidate.get(row.id) || [],
       notes: row.notes,
       createdAt: row.created_at?.toISOString?.() || row.created_at,
     }));
@@ -495,6 +745,25 @@ function createPostgresRepository() {
       readBy: notificationReads.get(row.id) || [],
     }));
 
+    const payouts = payoutsRes.rows.map((row) => ({
+      id: row.id,
+      candidateId: row.candidate_id,
+      scoutId: row.scout_id,
+      teamId: row.team_id,
+      offerId: row.offer_id,
+      baseAmount: row.base_amount,
+      boostPercent: row.boost_percent,
+      boostAmount: row.boost_amount,
+      finalAmount: row.final_amount,
+      referralPercent: row.referral_percent,
+      referralAmount: row.referral_amount,
+      status: row.status,
+      createdAt: row.created_at?.toISOString?.() || row.created_at,
+      approvedAt: row.approved_at?.toISOString?.() || row.approved_at,
+      paidAt: row.paid_at?.toISOString?.() || row.paid_at,
+      updatedAt: row.updated_at?.toISOString?.() || row.updated_at,
+    }));
+
     const auditLog = auditLogRes.rows.map((row) => ({
       id: row.id,
       actorId: row.actor_id,
@@ -519,10 +788,13 @@ function createPostgresRepository() {
     const posts = postsRes.rows.map((row) => ({
       id: row.id,
       type: row.type,
+      category: row.category || "general",
+      pinned: !!row.pinned,
       authorId: row.author_id,
       authorName: row.author_name,
       title: row.title,
       body: row.body,
+      comments: commentsByPost.get(row.id) || [],
       createdAt: row.created_at?.toISOString?.() || row.created_at,
     }));
 
@@ -597,6 +869,7 @@ function createPostgresRepository() {
       user: userView,
       metadata: {
         roles: ROLE_LABELS,
+        permissionLabels: PERMISSION_LABELS,
         permissions: userView.permissions,
         companyName: "ScoutFlow HQ",
         locale: "ru-RU",
@@ -622,6 +895,7 @@ function createPostgresRepository() {
       posts,
       publicApplications,
       notifications,
+      payouts,
       scoreboard,
       auditLog,
       users: user.role === "owner" ? users.map((item) => safeUser(item)) : [],
@@ -631,6 +905,9 @@ function createPostgresRepository() {
   async function replaceAll(client, db) {
     const orderedDeletes = [
       "sessions",
+      "payouts",
+      "post_comments",
+      "candidate_documents",
       "notification_users",
       "notifications",
       "chat_participants",
@@ -665,8 +942,8 @@ function createPostgresRepository() {
     for (const user of db.users) {
       await client.query(
         `INSERT INTO users
-        (id, name, email, password_hash, password_salt, password_updated_at, role, team_id, subscription, theme, referral_code, referral_income_percent, payout_boost, locale)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        (id, name, email, password_hash, password_salt, password_updated_at, role, team_id, subscription, theme, referral_code, referral_income_percent, payout_boost, locale, permissions_override)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb)`,
         [
           user.id,
           user.name,
@@ -682,6 +959,7 @@ function createPostgresRepository() {
           user.referralIncomePercent,
           user.payoutBoost,
           user.locale,
+          JSON.stringify(user.permissionsOverride || {}),
         ],
       );
     }
@@ -699,8 +977,8 @@ function createPostgresRepository() {
     for (const candidate of db.candidates) {
       await client.query(
         `INSERT INTO candidates
-        (id, name, offer_id, scout_id, team_id, status, location, interview_passed, registration_passed, shifts_completed, notes, created_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+        (id, name, offer_id, scout_id, team_id, status, location, interview_at, interview_format, interviewer_name, interview_status, interview_notes, interview_passed, registration_passed, shifts_completed, notes, created_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)`,
         [
           candidate.id,
           candidate.name,
@@ -709,11 +987,55 @@ function createPostgresRepository() {
           textOrNull(candidate.teamId),
           candidate.status,
           textOrNull(candidate.location),
+          textOrNull(candidate.interviewAt),
+          textOrNull(candidate.interviewFormat),
+          textOrNull(candidate.interviewerName),
+          candidate.interviewStatus || "unscheduled",
+          candidate.interviewNotes || "",
           candidate.interviewPassed,
           candidate.registrationPassed,
           candidate.shiftsCompleted,
           candidate.notes,
           candidate.createdAt,
+        ],
+      );
+      for (const document of candidate.documents || []) {
+        await client.query(
+          "INSERT INTO candidate_documents (id, candidate_id, title, type, url, note, uploaded_by_user_id, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+          [document.id, candidate.id, document.title, document.type, textOrNull(document.url), document.note || "", textOrNull(document.uploadedByUserId), document.createdAt],
+        );
+      }
+      for (const comment of candidate.comments || []) {
+        await client.query(
+          "INSERT INTO candidate_comments (id, candidate_id, author_id, author_name, body, created_at) VALUES ($1,$2,$3,$4,$5,$6)",
+          [comment.id, candidate.id, textOrNull(comment.authorId), comment.authorName, comment.body, comment.createdAt],
+        );
+      }
+    }
+
+    await ensurePayoutsTable();
+    for (const payout of db.payouts || []) {
+      await client.query(
+        `INSERT INTO payouts
+        (id, candidate_id, scout_id, team_id, offer_id, base_amount, boost_percent, boost_amount, final_amount, referral_percent, referral_amount, status, created_at, approved_at, paid_at, updated_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)`,
+        [
+          payout.id,
+          payout.candidateId,
+          textOrNull(payout.scoutId),
+          textOrNull(payout.teamId),
+          textOrNull(payout.offerId),
+          payout.baseAmount,
+          payout.boostPercent,
+          payout.boostAmount,
+          payout.finalAmount,
+          payout.referralPercent,
+          payout.referralAmount,
+          payout.status,
+          payout.createdAt,
+          textOrNull(payout.approvedAt),
+          textOrNull(payout.paidAt),
+          payout.updatedAt,
         ],
       );
     }
@@ -741,9 +1063,15 @@ function createPostgresRepository() {
 
     for (const post of db.posts) {
       await client.query(
-        "INSERT INTO posts (id, type, author_id, author_name, title, body, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)",
-        [post.id, post.type, textOrNull(post.authorId), post.authorName, post.title, post.body, post.createdAt],
+        "INSERT INTO posts (id, type, category, pinned, author_id, author_name, title, body, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+        [post.id, post.type, post.category || "general", !!post.pinned, textOrNull(post.authorId), post.authorName, post.title, post.body, post.createdAt],
       );
+      for (const comment of post.comments || []) {
+        await client.query(
+          "INSERT INTO post_comments (id, post_id, author_id, author_name, body, created_at) VALUES ($1,$2,$3,$4,$5,$6)",
+          [comment.id, post.id, textOrNull(comment.authorId), comment.authorName, comment.body, comment.createdAt],
+        );
+      }
     }
 
     for (const chat of db.chats) {
@@ -850,6 +1178,7 @@ function createPostgresRepository() {
         referralIncomePercent: row.referral_income_percent,
         payoutBoost: row.payout_boost,
         locale: row.locale,
+        permissionsOverride: row.permissions_override || {},
       };
     },
 
@@ -876,7 +1205,50 @@ function createPostgresRepository() {
         referralIncomePercent: row.referral_income_percent,
         payoutBoost: row.payout_boost,
         locale: row.locale,
+        permissionsOverride: row.permissions_override || {},
       };
+    },
+
+    async syncPayouts(syncer) {
+      await ensurePayoutsTable();
+      const db = await this.read();
+      await syncer(db);
+      for (const payout of db.payouts || []) {
+        await pool.query(
+          `INSERT INTO payouts
+          (id, candidate_id, scout_id, team_id, offer_id, base_amount, boost_percent, boost_amount, final_amount, referral_percent, referral_amount, status, created_at, approved_at, paid_at, updated_at)
+          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+          ON CONFLICT (candidate_id) DO UPDATE SET
+            scout_id = EXCLUDED.scout_id,
+            team_id = EXCLUDED.team_id,
+            offer_id = EXCLUDED.offer_id,
+            base_amount = EXCLUDED.base_amount,
+            boost_percent = EXCLUDED.boost_percent,
+            boost_amount = EXCLUDED.boost_amount,
+            final_amount = EXCLUDED.final_amount,
+            referral_percent = EXCLUDED.referral_percent,
+            referral_amount = EXCLUDED.referral_amount,
+            updated_at = EXCLUDED.updated_at`,
+          [
+            payout.id,
+            payout.candidateId,
+            textOrNull(payout.scoutId),
+            textOrNull(payout.teamId),
+            textOrNull(payout.offerId),
+            payout.baseAmount,
+            payout.boostPercent,
+            payout.boostAmount,
+            payout.finalAmount,
+            payout.referralPercent,
+            payout.referralAmount,
+            payout.status,
+            payout.createdAt,
+            textOrNull(payout.approvedAt),
+            textOrNull(payout.paidAt),
+            payout.updatedAt,
+          ],
+        );
+      }
     },
 
     async getBootstrapData(user) {
@@ -938,6 +1310,24 @@ function createPostgresRepository() {
       }
     },
 
+    async markNotificationRead(notificationId, userId, readAt) {
+      await pool.query(
+        `UPDATE notification_users
+         SET read_at = COALESCE(read_at, $3)
+         WHERE notification_id = $1 AND user_id = $2`,
+        [notificationId, userId, readAt],
+      );
+    },
+
+    async markAllNotificationsRead(userId, readAt) {
+      await pool.query(
+        `UPDATE notification_users
+         SET read_at = COALESCE(read_at, $2)
+         WHERE user_id = $1`,
+        [userId, readAt],
+      );
+    },
+
     async insertPublicApplication(application) {
       await pool.query(
         "INSERT INTO public_applications (id, name, contact, experience, languages, motivation, status, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
@@ -966,8 +1356,8 @@ function createPostgresRepository() {
     async insertUser(user) {
       await pool.query(
         `INSERT INTO users
-        (id, name, email, password_hash, password_salt, password_updated_at, role, team_id, subscription, theme, referral_code, referral_income_percent, payout_boost, locale)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)`,
+        (id, name, email, password_hash, password_salt, password_updated_at, role, team_id, subscription, theme, referral_code, referral_income_percent, payout_boost, locale, permissions_override)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb)`,
         [
           user.id,
           user.name,
@@ -983,6 +1373,7 @@ function createPostgresRepository() {
           user.referralIncomePercent,
           user.payoutBoost,
           user.locale,
+          JSON.stringify(user.permissionsOverride || {}),
         ],
       );
       if (user.teamId) {
@@ -996,8 +1387,8 @@ function createPostgresRepository() {
     async insertCandidate(candidate) {
       await pool.query(
         `INSERT INTO candidates
-        (id, name, offer_id, scout_id, team_id, status, location, interview_passed, registration_passed, shifts_completed, notes, created_at)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+        (id, name, offer_id, scout_id, team_id, status, location, interview_at, interview_format, interviewer_name, interview_passed, registration_passed, shifts_completed, notes, created_at)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
         [
           candidate.id,
           candidate.name,
@@ -1006,6 +1397,9 @@ function createPostgresRepository() {
           textOrNull(candidate.teamId),
           candidate.status,
           textOrNull(candidate.location),
+          textOrNull(candidate.interviewAt),
+          textOrNull(candidate.interviewFormat),
+          textOrNull(candidate.interviewerName),
           candidate.interviewPassed,
           candidate.registrationPassed,
           candidate.shiftsCompleted,
@@ -1020,6 +1414,11 @@ function createPostgresRepository() {
       const values = [];
       const mapping = {
         status: "status",
+        interviewAt: "interview_at",
+        interviewFormat: "interview_format",
+        interviewerName: "interviewer_name",
+        interviewStatus: "interview_status",
+        interviewNotes: "interview_notes",
         interviewPassed: "interview_passed",
         registrationPassed: "registration_passed",
         shiftsCompleted: "shifts_completed",
@@ -1039,6 +1438,60 @@ function createPostgresRepository() {
         [candidateId, ...values],
       );
       return row;
+    },
+
+    async insertCandidateDocument(document) {
+      await ensureCandidateDocsSchema();
+      await pool.query(
+        "INSERT INTO candidate_documents (id, candidate_id, title, type, url, note, uploaded_by_user_id, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)",
+        [document.id, document.candidateId, document.title, document.type, textOrNull(document.url), document.note || "", textOrNull(document.uploadedByUserId), document.createdAt],
+      );
+    },
+
+    async deleteCandidateDocument(documentId) {
+      await ensureCandidateDocsSchema();
+      await pool.query("DELETE FROM candidate_documents WHERE id = $1", [documentId]);
+    },
+
+    async insertCandidateComment(comment) {
+      await ensureCandidateCommentsSchema();
+      await pool.query(
+        "INSERT INTO candidate_comments (id, candidate_id, author_id, author_name, body, created_at) VALUES ($1,$2,$3,$4,$5,$6)",
+        [comment.id, comment.candidateId, textOrNull(comment.authorId), comment.authorName, comment.body, comment.createdAt],
+      );
+    },
+
+    async patchPayoutStatus(payoutId, payload) {
+      await ensurePayoutsTable();
+      const row = await queryOne(
+        `UPDATE payouts
+         SET status = COALESCE($2, status),
+             approved_at = $3,
+             paid_at = $4,
+             updated_at = COALESCE($5, updated_at)
+         WHERE id = $1
+         RETURNING *`,
+        [payoutId, textOrNull(payload.status), textOrNull(payload.approvedAt), textOrNull(payload.paidAt), textOrNull(payload.updatedAt)],
+      );
+      if (!row) return null;
+      return {
+        id: row.id,
+        candidateId: row.candidate_id,
+        scoutId: row.scout_id,
+        teamId: row.team_id,
+        offerId: row.offer_id,
+        baseAmount: row.base_amount,
+        boostPercent: row.boost_percent,
+        boostAmount: row.boost_amount,
+        finalAmount: row.final_amount,
+        referralPercent: row.referral_percent,
+        referralAmount: row.referral_amount,
+        status: row.status,
+        createdAt: row.created_at?.toISOString?.() || row.created_at,
+        approvedAt: row.approved_at?.toISOString?.() || row.approved_at,
+        paidAt: row.paid_at?.toISOString?.() || row.paid_at,
+        updatedAt: row.updated_at?.toISOString?.() || row.updated_at,
+      };
     },
 
     async insertTask(task) {
@@ -1158,9 +1611,18 @@ function createPostgresRepository() {
     },
 
     async insertPost(post) {
+      await ensureSocialSchema();
       await pool.query(
-        "INSERT INTO posts (id, type, author_id, author_name, title, body, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7)",
-        [post.id, post.type, textOrNull(post.authorId), post.authorName, post.title, post.body, post.createdAt],
+        "INSERT INTO posts (id, type, category, pinned, author_id, author_name, title, body, created_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
+        [post.id, post.type, post.category || "general", !!post.pinned, textOrNull(post.authorId), post.authorName, post.title, post.body, post.createdAt],
+      );
+    },
+
+    async insertPostComment(comment) {
+      await ensureSocialSchema();
+      await pool.query(
+        "INSERT INTO post_comments (id, post_id, author_id, author_name, body, created_at) VALUES ($1,$2,$3,$4,$5,$6)",
+        [comment.id, comment.postId, textOrNull(comment.authorId), comment.authorName, comment.body, comment.createdAt],
       );
     },
 

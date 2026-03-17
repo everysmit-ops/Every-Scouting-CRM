@@ -3,3 +3,5 @@ node_modules/
 .DS_Store
 npm-debug.log*
 backend/data/seed.postgres.sql
+backend/uploads/*
+!backend/uploads/.gitkeep

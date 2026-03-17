@@ -1,15 +1,20 @@
 const { getPool, closePool } = require("../lib/postgres");
 
 const TABLES = [
+  "schema_migrations",
   "sessions",
   "notification_users",
   "notifications",
+  "candidate_comments",
+  "post_comments",
   "chat_participants",
   "chat_messages",
   "chats",
   "training_assignments",
   "trainings",
   "tasks",
+  "payouts",
+  "candidate_documents",
   "offer_assignments",
   "candidates",
   "offers",

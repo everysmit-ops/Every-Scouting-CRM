@@ -36,6 +36,12 @@ function createFileRepository() {
       return getBootstrap(db, user);
     },
 
+    async syncPayouts(syncer) {
+      return this.transaction(async (db) => {
+        await syncer(db);
+      });
+    },
+
     async health() {
       return { ok: true, provider: "file" };
     },

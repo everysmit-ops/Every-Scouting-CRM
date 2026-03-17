@@ -4,11 +4,13 @@ const { sendJson, serveStatic } = require("./lib/http");
 const { createRepository } = require("./repositories/repositoryFactory");
 const { createPlatformService } = require("./services/platformService");
 const { createApiRouter } = require("./routes/api");
+const { createRealtimeHub } = require("./lib/realtime");
 
 function createRequestHandler() {
   const repository = createRepository();
+  const realtime = createRealtimeHub();
   const service = createPlatformService(repository);
-  const routeApi = createApiRouter({ repository, service });
+  const routeApi = createApiRouter({ repository, service, realtime });
 
   return async (request, response) => {
     const url = new URL(request.url, `http://${request.headers.host}`);
@@ -31,8 +33,9 @@ function createRequestHandler() {
 
 function startServer() {
   const repository = createRepository();
+  const realtime = createRealtimeHub();
   const service = createPlatformService(repository);
-  const routeApi = createApiRouter({ repository, service });
+  const routeApi = createApiRouter({ repository, service, realtime });
 
   const server = http.createServer(async (request, response) => {
     const url = new URL(request.url, `http://${request.headers.host}`);
@@ -58,6 +61,7 @@ function startServer() {
   async function shutdown(signal) {
     console.log(`${signal} received, shutting down gracefully...`);
     server.close(async () => {
+      realtime.close();
       if (typeof repository.close === "function") {
         await repository.close();
       }

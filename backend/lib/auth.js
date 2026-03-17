@@ -21,7 +21,24 @@ function normalizeDb(db) {
   db.sessions = Array.isArray(db.sessions) ? db.sessions : [];
   db.auditLog = Array.isArray(db.auditLog) ? db.auditLog : [];
   db.notifications = Array.isArray(db.notifications) ? db.notifications : [];
+  db.payouts = Array.isArray(db.payouts) ? db.payouts : [];
+  db.posts = Array.isArray(db.posts) ? db.posts : [];
   db.users = Array.isArray(db.users) ? db.users : [];
+
+  db.posts = db.posts.map((post) => ({
+    comments: Array.isArray(post.comments) ? post.comments : [],
+    category: post.category || "general",
+    pinned: Boolean(post.pinned),
+    ...post,
+  }));
+  db.candidates = Array.isArray(db.candidates) ? db.candidates : [];
+  db.candidates = db.candidates.map((candidate) => ({
+    documents: Array.isArray(candidate.documents) ? candidate.documents : [],
+    comments: Array.isArray(candidate.comments) ? candidate.comments : [],
+    interviewStatus: candidate.interviewStatus || (candidate.interviewPassed ? "completed" : candidate.interviewAt ? "scheduled" : "unscheduled"),
+    interviewNotes: candidate.interviewNotes || "",
+    ...candidate,
+  }));
 
   db.users = db.users.map((user) => {
     if (user.password) {
@@ -52,10 +69,14 @@ function normalizeDb(db) {
 function safeUser(user) {
   if (!user) return null;
   const { passwordHash, passwordSalt, passwordUpdatedAt, ...rest } = user;
+  const basePermissions = PERMISSIONS[user.role] || PERMISSIONS.scout;
   return {
     ...rest,
     roleLabel: ROLE_LABELS[user.role],
-    permissions: PERMISSIONS[user.role] || PERMISSIONS.scout,
+    permissions: {
+      ...basePermissions,
+      ...(user.permissionsOverride || {}),
+    },
   };
 }
 

@@ -5,6 +5,7 @@ const ROOT = path.resolve(__dirname, "..", "..");
 const FRONTEND_ROOT = path.join(ROOT, "frontend");
 const DB_PATH = path.join(ROOT, "backend", "data", "db.json");
 const ENV_PATH = path.join(ROOT, ".env");
+const UPLOADS_ROOT = path.join(ROOT, "backend", "uploads");
 
 loadEnvFile(ENV_PATH);
 
@@ -19,10 +20,15 @@ const MIME_TYPES = {
   ".css": "text/css; charset=utf-8",
   ".js": "application/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
   ".png": "image/png",
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
+  ".webp": "image/webp",
   ".svg": "image/svg+xml",
+  ".pdf": "application/pdf",
+  ".doc": "application/msword",
+  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 };
 
 const ROLE_LABELS = {
@@ -67,6 +73,15 @@ const PERMISSIONS = {
   },
 };
 
+const PERMISSION_LABELS = {
+  manageOffers: "Управление офферами",
+  manageTeams: "Управление командами",
+  manageTasks: "Управление задачами",
+  manageTrainings: "Управление обучением",
+  reviewApplications: "Обработка заявок",
+  manageUsers: "Управление пользователями",
+};
+
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;
 
@@ -87,6 +102,7 @@ function loadEnvFile(filePath) {
 module.exports = {
   ROOT,
   FRONTEND_ROOT,
+  UPLOADS_ROOT,
   DB_PATH,
   ENV_PATH,
   PORT,
@@ -97,4 +113,5 @@ module.exports = {
   MIME_TYPES,
   ROLE_LABELS,
   PERMISSIONS,
+  PERMISSION_LABELS,
 };

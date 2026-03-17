@@ -11,8 +11,12 @@
     "export:seed": "node backend/scripts/exportSeedSql.js",
     "db:check": "node backend/scripts/checkPostgres.js",
     "db:init": "node backend/scripts/initPostgres.js",
+    "db:migrate": "node backend/scripts/migratePostgres.js",
+    "db:status": "node backend/scripts/statusPostgres.js",
+    "db:bootstrap": "node backend/scripts/bootstrapPostgres.js",
     "db:reset": "node backend/scripts/resetPostgres.js",
-    "smoke:health": "curl -fsS http://127.0.0.1:4173/api/health"
+    "smoke:health": "curl -fsS http://127.0.0.1:4173/api/health",
+    "smoke:platform": "node backend/scripts/smokePlatform.js"
   },
   "dependencies": {
     "pg": "^8.20.0"
