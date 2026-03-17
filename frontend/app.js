@@ -344,7 +344,7 @@ function pushToast(message, options = {}) {
   node.className = "toast-card";
   node.innerHTML = `
     <div class="toast-copy">
-      <strong>${options.title || "ScoutFlow HQ"}</strong>
+      <strong>${options.title || "Every Scouting"}</strong>
       <div>${message}</div>
     </div>
     ${options.actionLabel ? `<button class="ghost-btn" type="button">${options.actionLabel}</button>` : ""}
@@ -594,12 +594,83 @@ function renderSession() {
 function renderNav() {
   document.querySelectorAll(".nav-item").forEach((button) => {
     button.classList.toggle("active", button.dataset.view === activeView);
-    if (button.dataset.view === "notifications" && state?.user) {
-      const unreadCount = getUnreadNotifications().length;
-      button.innerHTML = unreadCount
-        ? `Уведомления <span class="nav-badge">${unreadCount}</span>`
-        : "Уведомления";
-    }
+  });
+}
+
+function renderUtilityPanels() {
+  const notificationPopover = el("notificationPopover");
+  const notificationBadge = el("notificationBadge");
+  const unread = getUnreadNotifications();
+
+  if (notificationBadge) {
+    notificationBadge.textContent = String(unread.length);
+    notificationBadge.classList.toggle("hidden", !unread.length);
+  }
+
+  if (notificationPopover) {
+    notificationPopover.innerHTML = `
+      <div class="popover-title-row">
+        <strong>Уведомления</strong>
+        <span class="chip">${unread.length} новых</span>
+      </div>
+      <div class="popover-list">
+        ${
+          unread.length
+            ? unread
+                .slice(0, 6)
+                .map(
+                  (item) => `
+                    <button class="popover-item" type="button" data-open-notification-popover="${item.id}">
+                      <strong>${item.text}</strong>
+                      <span class="small-note">${formatDateTimeLabel(item.createdAt)}</span>
+                    </button>
+                  `,
+                )
+                .join("")
+            : '<div class="empty-text">Новых уведомлений нет.</div>'
+        }
+      </div>
+      <div class="inline-actions">
+        <button class="ghost-btn" type="button" data-mark-all-read-popover="true" ${!unread.length ? "disabled" : ""}>Прочитать все</button>
+      </div>
+    `;
+  }
+
+  document.querySelectorAll("[data-open-notification-popover]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const notification = (state.notifications || []).find((item) => item.id === button.dataset.openNotificationPopover);
+      if (!notification) return;
+      try {
+        await api(`${API.notifications}/${notification.id}/read`, { method: "PATCH" });
+        state.notifications = (state.notifications || []).map((item) =>
+          item.id === notification.id ? { ...item, readBy: [...new Set([...(item.readBy || []), state.user.id])] } : item,
+        );
+      } catch (error) {
+        toast(error.message);
+      }
+      const target = resolveNotificationTarget(notification);
+      activeView = target.view;
+      if (target.entityType && target.entityId) {
+        setDeepLink(target.view, target.entityType, target.entityId);
+      }
+      renderWorkspace();
+    });
+  });
+
+  document.querySelectorAll("[data-mark-all-read-popover]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      try {
+        await api(`${API.notifications}/read-all`, { method: "POST" });
+        state.notifications = (state.notifications || []).map((item) =>
+          item.userIds && !item.userIds.includes(state.user.id)
+            ? item
+            : { ...item, readBy: [...new Set([...(item.readBy || []), state.user.id])] },
+        );
+        renderWorkspace();
+      } catch (error) {
+        toast(error.message);
+      }
+    });
   });
 }
 
@@ -653,7 +724,7 @@ function renderDashboardView() {
     <div class="panel-header">
       <div>
         <h3>Общий обзор</h3>
-        <div class="panel-subtitle">Данные подгружаются с backend по вашей роли и правам доступа.</div>
+        <div class="panel-subtitle">Ключевые цифры и сигналы по вашему рабочему контуру без лишнего шума.</div>
       </div>
       <button class="action-btn" id="quickCandidateBtn" ${actionLockAttrs("добавлять кандидатов")}>Добавить кандидата</button>
     </div>
@@ -680,29 +751,25 @@ function renderDashboardView() {
 
     <section class="list-grid">
       <div>
-        <h3>Уведомления</h3>
-        ${notifications || '<p class="empty-text">Пока уведомлений нет.</p>'}
+        <h3>Быстрые сигналы</h3>
+        ${notifications || '<p class="empty-text">Сейчас нет непрочитанных сигналов.</p>'}
       </div>
-      <div>
-        <h3>ТОП по KPI</h3>
-        <div class="rank-list">${renderScoreboard()}</div>
-      </div>
-    </section>
-
-    <section class="list-grid">
       <div>
         <h3>Аудит действий</h3>
         ${audit || '<p class="empty-text">Пока пусто.</p>'}
       </div>
-      <div>
-        <h3>Внешние заявки</h3>
-        ${
-          state.user.role === "owner"
-            ? applications || '<p class="empty-text">Заявок пока нет.</p>'
-            : '<p class="empty-text">Этот блок доступен только главному админу.</p>'
-        }
-      </div>
     </section>
+
+    ${
+      state.user.role === "owner"
+        ? `
+          <section>
+            <h3>Внешние заявки</h3>
+            ${applications || '<p class="empty-text">Заявок пока нет.</p>'}
+          </section>
+        `
+        : ""
+    }
   `;
 
   el("quickCandidateBtn").addEventListener("click", async () => {
@@ -1573,7 +1640,7 @@ function renderTeamsView() {
   const teamMarkup = state.teams
     .map(
       (team) => `
-        <div class="list-item">
+        <div class="list-item team-overview-card">
           <div class="list-head">
             <strong>${team.name}</strong>
             <span class="chip">${team.kpiPercent}% KPI</span>
@@ -1589,140 +1656,29 @@ function renderTeamsView() {
     )
     .join("");
 
-  const visibleChats = state.chats.filter((chat) =>
-    !chatSearch.trim() ? true : `${chat.name} ${(chat.messages || []).map((message) => message.text).join(" ")}`.toLowerCase().includes(chatSearch.trim().toLowerCase()),
-  );
-  const activeChat = ensureActiveChat(visibleChats);
-
-  const chatListMarkup = visibleChats
-    .map(
-      (chat) => `
-        <button class="chat-room-card ${activeChat?.id === chat.id ? "active" : ""}" data-chat-open="${chat.id}">
-          <div class="list-head">
-            <strong>${chat.name}</strong>
-            <span class="chip">${getChatKindLabel(chat)}</span>
-          </div>
-          <div class="list-meta">${chat.messages.length} сообщений · unread: ${getChatUnreadCount(chat)}</div>
-          <p>${chat.messages.at(-1)?.text || "Диалог пока пуст."}</p>
-        </button>
-      `,
-    )
-    .join("");
-
-  const activeChatMarkup = activeChat
-    ? `
-      <div class="chat-room-stage">
-        <div class="chat-room-header">
-          <div>
-            <h3>${activeChat.name}</h3>
-            <div class="list-meta">${getChatKindLabel(activeChat)} · ${activeChat.messages.length} сообщений</div>
-          </div>
-          <div class="chip-row">
-            ${(activeChat.participantIds || [])
-              .map((participantId) => state.metadata.referenceData.users.find((user) => user.id === participantId))
-              .filter(Boolean)
-              .map((member) => `<span class="chip">${member.name}</span>`)
-              .join("") || `<span class="chip">${activeChat.global ? "Вся компания" : activeChat.teamId || "Комнатный доступ"}</span>`}
-          </div>
-        </div>
-        <div class="chat-thread">
-          ${(activeChat.messages || [])
-            .map(
-              (message) => `
-                <article class="message-bubble ${message.authorId === state.user.id ? "self" : ""}">
-                  <div class="chat-meta">
-                    <strong>${message.authorName}</strong>
-                    <span class="list-meta">${message.time}</span>
-                  </div>
-                  <p>${message.text}</p>
-                </article>
-              `,
-            )
-            .join("") || '<p class="empty-text">В этом чате пока нет сообщений.</p>'}
-        </div>
-        <div class="quick-reply-row">
-          <button class="ghost-btn" data-chat-template="candidate">Напомнить про кандидатов</button>
-          <button class="ghost-btn" data-chat-template="offer">Обсудить оффер</button>
-          <button class="ghost-btn" data-chat-template="task">Синк по задачам</button>
-        </div>
-        <div class="inline-actions">
-          <input class="chat-input" placeholder="Написать сообщение..." data-chat-input="${activeChat.id}" />
-          <button class="action-btn" data-chat-send="${activeChat.id}" ${actionLockAttrs("отправлять сообщения в чат")}>Отправить</button>
-        </div>
-      </div>
-    `
-    : '<p class="empty-text">Нет доступных чатов по текущему поиску.</p>';
-
   el("view-teams").innerHTML = `
     <div class="panel-header">
       <div>
-        <h3>Команды и коммуникации</h3>
-        <div class="panel-subtitle">Распределение процентов, KPI и рабочий чат-центр внутри команды и компании.</div>
+        <h3>Команды</h3>
+        <div class="panel-subtitle">Распределение процентов, KPI и состав каждой команды без коммуникационного блока.</div>
       </div>
     </div>
     ${renderTrainingGuard()}
-    <section class="list-grid">
-      <div>${teamMarkup || '<p class="empty-text">Нет команд.</p>'}</div>
-      <div class="chat-workspace">
-        <div class="inline-actions">
-          <input class="chat-search" id="chatSearchInput" placeholder="Поиск по чатам и сообщениям..." value="${chatSearch}" />
-        </div>
-        <div class="chat-shell">
-          <div class="chat-room-list">${chatListMarkup || '<p class="empty-text">Нет чатов.</p>'}</div>
-          <div class="chat-room-panel">${activeChatMarkup}</div>
-        </div>
+    <section>
+      <div class="section-heading-row">
+        <h3>Команды</h3>
+        <span class="chip">${state.teams.length} активных команд</span>
       </div>
+      <div class="table-like team-overview-list">${teamMarkup || '<p class="empty-text">Нет команд.</p>'}</div>
+    </section>
+    <section>
+      <div class="section-heading-row">
+        <h3>Командная структура</h3>
+        <span class="chip">${state.teams.reduce((sum, team) => sum + team.membersExpanded.length, 0)} участников</span>
+      </div>
+      <div class="small-note">Чат полностью удален из проекта. В этом разделе остаются только команды, состав, проценты и KPI.</div>
     </section>
   `;
-
-  const chatSearchInput = document.getElementById("chatSearchInput");
-  if (chatSearchInput) {
-    chatSearchInput.addEventListener("input", (event) => {
-      chatSearch = event.target.value;
-      renderTeamsView();
-    });
-  }
-
-  document.querySelectorAll("[data-chat-open]").forEach((button) => {
-    button.addEventListener("click", () => {
-      activeChatId = button.dataset.chatOpen;
-      renderTeamsView();
-    });
-  });
-
-  document.querySelectorAll("[data-chat-template]").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (!activeChat) return;
-      const input = document.querySelector(`[data-chat-input="${activeChat.id}"]`);
-      if (!input) return;
-      const templates = {
-        candidate: "Команда, давайте обновим статусы по кандидатам и зафиксируем узкие места.",
-        offer: "Нужно синхронизироваться по текущему офферу: кто в работе и где нужна помощь.",
-        task: "Давайте быстро сверим задачи, дедлайны и кто что закрывает сегодня.",
-      };
-      input.value = templates[button.dataset.chatTemplate] || "";
-      input.focus();
-    });
-  });
-
-  document.querySelectorAll("[data-chat-send]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      if (!ensureTrainingUnlocked("отправлять сообщения в чат")) return;
-      const chatId = button.dataset.chatSend;
-      const input = document.querySelector(`[data-chat-input="${chatId}"]`);
-      if (!input?.value.trim()) return;
-      try {
-        await api(`/api/chats/${chatId}/messages`, {
-          method: "POST",
-          body: JSON.stringify({ text: input.value.trim() }),
-        });
-        activeChatId = chatId;
-        await reloadWorkspace();
-      } catch (error) {
-        toast(error.message);
-      }
-    });
-  });
 
   bindTrainingGuardButton();
 }
@@ -2369,7 +2325,7 @@ function renderFinanceView() {
   if (financeReportBtn) {
     financeReportBtn.addEventListener("click", () => {
       const lines = [
-        `ScoutFlow HQ payout report`,
+        `Every Scouting payout report`,
         `Period: ${financePeriod}`,
         `Status filter: ${financeFilters.status}`,
         `Scout filter: ${financeFilters.scoutId}`,
@@ -2481,7 +2437,7 @@ function renderAnalyticsView() {
   ];
 
   const analyticsReport = [
-    `ScoutFlow HQ analytics snapshot`,
+    `Every Scouting analytics snapshot`,
     `Date: ${new Date().toLocaleString("ru-RU")}`,
     "",
     "Funnel:",
@@ -2891,6 +2847,7 @@ function renderProfileView() {
         <h3>Профиль и реферальная система</h3>
         <div class="panel-subtitle">Подписка, кастомизация, реферальный код и буст выплат.</div>
       </div>
+      <button class="ghost-btn" id="toggleProfileEditBtn">Редактировать</button>
     </div>
     <section class="profile-grid">
       <div class="profile-block">
@@ -2912,11 +2869,31 @@ function renderProfileView() {
         <p class="small-note">Расчетный доход канала при текущем профиле: ${formatMoney(finance.referralProjected)}.</p>
       </div>
       <div class="profile-block">
-        <h3>ТОП по KPI</h3>
-        <div class="rank-list">${renderScoreboard()}</div>
+        <form class="stack-form hidden" id="profileCustomizationForm">
+          <label>Ник<input name="nickname" placeholder="Как показывать имя" value="${state.user.name}" /></label>
+          <label>Username<input name="username" placeholder="@everyscout" /></label>
+          <label>Биография<textarea name="bio" rows="3" placeholder="Коротко о себе"></textarea></label>
+          <button class="primary-btn" type="submit">Сохранить</button>
+        </form>
       </div>
     </section>
   `;
+
+  const toggleProfileEditBtn = el("toggleProfileEditBtn");
+  if (toggleProfileEditBtn) {
+    toggleProfileEditBtn.addEventListener("click", () => {
+      const form = el("profileCustomizationForm");
+      if (form) form.classList.toggle("hidden");
+    });
+  }
+
+  const profileCustomizationForm = el("profileCustomizationForm");
+  if (profileCustomizationForm) {
+    profileCustomizationForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      toast("Блок редактирования профиля открыт как отдельная кнопка. Полную кастомизацию можно продолжать развивать отсюда.");
+    });
+  }
 }
 
 function renderManagementView() {
@@ -3121,28 +3098,45 @@ function renderView() {
 }
 
 function renderWorkspace() {
-  renderSession();
-  if (!state?.user) {
-    updateLiveSyncBadge();
+  try {
+    renderSession();
+    if (!state?.user) {
+      updateLiveSyncBadge();
+      renderDocumentPreview();
+      return;
+    }
+    currentLanguage = state.user.locale || currentLanguage;
+    if (el("languageSelect")) el("languageSelect").value = currentLanguage;
+    renderSummary();
+    renderNav();
+    renderUtilityPanels();
+    renderView();
     renderDocumentPreview();
-    return;
+    applyPendingDeepLink();
+    if (queuedRealtimeRefresh && !hasInteractiveFocus()) {
+      queuedRealtimeRefresh = false;
+    }
+    updateLiveSyncBadge("idle");
+  } catch (error) {
+    console.error(error);
+    const currentView = el(`view-${activeView}`);
+    if (currentView) {
+      currentView.innerHTML = `
+        <div class="panel-header">
+          <div>
+            <h3>Не удалось отрисовать раздел</h3>
+            <div class="panel-subtitle">Попробуйте обновить страницу. Часть интерфейса была собрана из старой версии и сейчас синхронизируется.</div>
+          </div>
+        </div>
+      `;
+    }
+    pushToast(error.message || "Ошибка рендера workspace");
   }
-  currentLanguage = state.user.locale || currentLanguage;
-  el("languageSelect").value = currentLanguage;
-  renderSummary();
-  renderNav();
-  renderView();
-  renderDocumentPreview();
-  applyPendingDeepLink();
-  if (queuedRealtimeRefresh && !hasInteractiveFocus()) {
-    queuedRealtimeRefresh = false;
-  }
-  updateLiveSyncBadge("idle");
 }
 
 function toast(message) {
   const node = el("loginMessage");
-  node.textContent = message;
+  if (node) node.textContent = message;
   pushToast(message);
 }
 
@@ -3155,7 +3149,7 @@ async function reloadWorkspace() {
 async function login(email, password) {
   const data = await api(API.login, {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email: String(email || "").trim(), password: String(password || "").trim() }),
     headers: {},
   });
   authToken = data.token;
@@ -3205,44 +3199,63 @@ function bindStaticEvents() {
     });
   });
 
-  el("applicationForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    try {
-      await api(API.publicApplications, {
-        method: "POST",
-        body: JSON.stringify({
-          name: formData.get("name"),
-          contact: formData.get("contact"),
-          experience: formData.get("experience"),
-          languages: formData.get("languages"),
-          motivation: formData.get("motivation"),
-        }),
-      });
-      event.currentTarget.reset();
-      toast("Заявка отправлена и уже доступна главному админу.");
-    } catch (error) {
-      toast(error.message);
-    }
-  });
+  const applicationForm = el("applicationForm");
+  if (applicationForm) {
+    applicationForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      try {
+        await api(API.publicApplications, {
+          method: "POST",
+          body: JSON.stringify({
+            name: formData.get("name"),
+            contact: formData.get("contact"),
+            experience: formData.get("experience"),
+            languages: formData.get("languages"),
+            motivation: formData.get("motivation"),
+          }),
+        });
+        event.currentTarget.reset();
+        toast("Заявка отправлена и уже доступна главному админу.");
+      } catch (error) {
+        toast(error.message);
+      }
+    });
+  }
 
-  el("loginForm").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    try {
-      toast("Выполняю вход...");
-      await login(formData.get("email"), formData.get("password"));
-      toast("Вход выполнен. Рабочее пространство загружено.");
-    } catch (error) {
-      toast(error.message);
-    }
-  });
+  const loginForm = el("loginForm");
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const formData = new FormData(event.currentTarget);
+      try {
+        toast("Выполняю вход...");
+        await login(formData.get("email"), formData.get("password"));
+        toast("Вход выполнен. Рабочее пространство загружено.");
+      } catch (error) {
+        toast(error.message);
+      }
+    });
+  }
 
-  el("logoutBtn").addEventListener("click", logout);
-  el("languageSelect").addEventListener("change", (event) => {
-    currentLanguage = event.target.value;
-    renderWorkspace();
-  });
+  const logoutBtn = el("logoutBtn");
+  if (logoutBtn) logoutBtn.addEventListener("click", logout);
+
+  const languageSelect = el("languageSelect");
+  if (languageSelect) {
+    languageSelect.addEventListener("change", (event) => {
+      currentLanguage = event.target.value;
+      renderWorkspace();
+    });
+  }
+
+  const notificationToggleBtn = el("notificationToggleBtn");
+  if (notificationToggleBtn) {
+    notificationToggleBtn.addEventListener("click", () => {
+      const popover = el("notificationPopover");
+      if (popover) popover.classList.toggle("hidden");
+    });
+  }
 
   document.querySelectorAll(".nav-item").forEach((button) => {
     button.addEventListener("click", () => {

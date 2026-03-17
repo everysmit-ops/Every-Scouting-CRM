@@ -267,7 +267,7 @@ function createPostgresRepository() {
     });
 
     const db = {
-      company: { name: "ScoutFlow HQ", locale: "ru-RU" },
+      company: { name: "Every Scouting", locale: "ru-RU" },
       teams: teamsRes.rows.map((row) => ({
         id: row.id,
         name: row.name,
@@ -871,7 +871,7 @@ function createPostgresRepository() {
         roles: ROLE_LABELS,
         permissionLabels: PERMISSION_LABELS,
         permissions: userView.permissions,
-        companyName: "ScoutFlow HQ",
+        companyName: "Every Scouting",
         locale: "ru-RU",
         referenceData: {
           teams: teams.map((team) => ({ id: team.id, name: team.name })),

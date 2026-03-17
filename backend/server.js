@@ -55,7 +55,7 @@ function startServer() {
     }
   });
   server.listen(PORT, HOST, () => {
-    console.log(`ScoutFlow HQ is running at http://${HOST}:${PORT}`);
+    console.log(`Every Scouting is running at http://${HOST}:${PORT}`);
   });
 
   async function shutdown(signal) {

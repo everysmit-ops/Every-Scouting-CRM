@@ -1,6 +1,6 @@
 {
   "company": {
-    "name": "ScoutFlow HQ",
+    "name": "Every Scouting",
     "locale": "ru-RU"
   },
   "users": [
@@ -285,7 +285,7 @@
       "id": "post-1",
       "type": "news",
       "authorId": "user-owner",
-      "authorName": "ScoutFlow Newsroom",
+      "authorName": "Every Scouting Newsroom",
       "title": "Весенний KPI-спринт открыт",
       "body": "Команды с лучшей конверсией получат повышенный бонус к выплатам.",
       "createdAt": "2026-03-16T08:00:00.000Z"
