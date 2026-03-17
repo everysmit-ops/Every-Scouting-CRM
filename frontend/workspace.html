@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Every Scouting Workspace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="workspace-page">
+    <div class="app-shell workspace-shell">
+      <nav class="topbar workspace-topbar">
+        <div class="brand">
+          <span class="brand-badge">ES</span>
+          <div>
+            <p>Every Scouting</p>
+            <span>Внутреннее рабочее пространство</span>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <a class="ghost-btn link-btn" href="/">На лендинг</a>
+        </div>
+      </nav>
+
+      <main class="workspace-main">
+        <section class="auth-grid auth-grid-guest" id="workspaceAuthGrid">
+          <form class="card login-card" id="loginForm">
+            <div class="login-card-header">
+              <div>
+                <h1>Вход в платформу</h1>
+                <div class="panel-subtitle">Авторизация для админа, тимлида и скаута.</div>
+              </div>
+            </div>
+            <label>
+              Email
+              <input type="email" name="email" placeholder="owner@scoutflow.local" required />
+            </label>
+            <label>
+              Пароль
+              <input type="password" name="password" placeholder="demo123" required />
+            </label>
+            <button class="primary-btn wide" type="submit">Войти</button>
+            <div class="small-note" id="loginMessage">После входа загрузятся ваши данные и разрешенные действия.</div>
+
+            <div class="session-panel-inline" id="sessionPanel">
+              <div id="guestState">
+                <strong>Demo logins</strong>
+                <div class="demo-login-list">
+                  <button class="chip demo-login-chip" type="button" data-demo-email="owner@scoutflow.local" data-demo-password="demo123">owner@scoutflow.local / demo123</button>
+                  <button class="chip demo-login-chip" type="button" data-demo-email="lead@scoutflow.local" data-demo-password="demo123">lead@scoutflow.local / demo123</button>
+                  <button class="chip demo-login-chip" type="button" data-demo-email="scout@scoutflow.local" data-demo-password="demo123">scout@scoutflow.local / demo123</button>
+                  <button class="chip demo-login-chip" type="button" data-demo-email="referral@scoutflow.local" data-demo-password="demo123">referral@scoutflow.local / demo123</button>
+                </div>
+              </div>
+              <div class="session-user hidden" id="activeSession"></div>
+            </div>
+          </form>
+
+          <section class="card content-panel hidden" id="workspaceApp">
+            <div class="workspace-utilitybar">
+              <div class="workspace-utility-left">
+                <div class="live-sync-chip" id="liveSyncBadge">Live sync: off</div>
+              </div>
+              <div class="workspace-utility-right">
+                <div class="utility-popover-wrap">
+                  <button class="ghost-btn utility-btn" id="notificationToggleBtn" title="Уведомления">
+                    <span class="utility-icon">!</span>
+                    <span class="nav-badge hidden" id="notificationBadge">0</span>
+                  </button>
+                  <div class="utility-popover hidden" id="notificationPopover"></div>
+                </div>
+                <button class="ghost-btn utility-btn" id="logoutBtn" title="Выйти">
+                  <span class="utility-icon">Out</span>
+                </button>
+              </div>
+            </div>
+
+            <section class="dashboard-grid" id="summaryGrid"></section>
+
+            <section class="main-grid">
+              <aside class="card sidebar-nav">
+                <div class="nav-group nav-group-icons">
+                  <button class="nav-item active" data-view="dashboard" title="Обзор">
+                    <span class="nav-icon">Ho</span>
+                    <span class="nav-text">Обзор</span>
+                  </button>
+                  <button class="nav-item" data-view="candidates" title="Кандидаты">
+                    <span class="nav-icon">Cd</span>
+                    <span class="nav-text">Кандидаты</span>
+                  </button>
+                  <button class="nav-item" data-view="teams" title="Команды">
+                    <span class="nav-icon">Tm</span>
+                    <span class="nav-text">Команды</span>
+                  </button>
+                  <button class="nav-item" data-view="finance" title="Кошелек">
+                    <span class="nav-icon">Wl</span>
+                    <span class="nav-text">Кошелек</span>
+                  </button>
+                  <button class="nav-item" data-view="profile" title="Профиль">
+                    <span class="nav-icon">Pf</span>
+                    <span class="nav-text">Профиль</span>
+                  </button>
+                </div>
+                <div class="nav-group nav-group-compact">
+                  <button class="nav-item nav-item-compact" data-view="offers">Офферы</button>
+                  <button class="nav-item nav-item-compact" data-view="tasks">Задачи</button>
+                  <button class="nav-item nav-item-compact" data-view="calendar">Календарь</button>
+                  <button class="nav-item nav-item-compact" data-view="training">Обучение</button>
+                  <button class="nav-item nav-item-compact" data-view="social">Лента</button>
+                  <button class="nav-item nav-item-compact" data-view="analytics">Аналитика</button>
+                  <button class="nav-item nav-item-compact" data-view="management">Админ</button>
+                </div>
+                <div class="sidebar-footer">
+                  <div class="utility-popover-wrap utility-popover-wrap-bottom">
+                    <button class="nav-item nav-item-settings" id="settingsToggleBtn" title="Настройки">
+                      <span class="nav-icon">St</span>
+                      <span class="nav-text">Настройки</span>
+                    </button>
+                    <div class="utility-popover utility-popover-settings hidden" id="settingsPopover"></div>
+                  </div>
+                </div>
+              </aside>
+
+              <section class="content-stack">
+                <article class="card content-panel" id="view-dashboard"></article>
+                <article class="card content-panel hidden" id="view-notifications"></article>
+                <article class="card content-panel hidden" id="view-candidates"></article>
+                <article class="card content-panel hidden" id="view-calendar"></article>
+                <article class="card content-panel hidden" id="view-offers"></article>
+                <article class="card content-panel hidden" id="view-teams"></article>
+                <article class="card content-panel hidden" id="view-tasks"></article>
+                <article class="card content-panel hidden" id="view-finance"></article>
+                <article class="card content-panel hidden" id="view-analytics"></article>
+                <article class="card content-panel hidden" id="view-training"></article>
+                <article class="card content-panel hidden" id="view-social"></article>
+                <article class="card content-panel hidden" id="view-profile"></article>
+                <article class="card content-panel hidden" id="view-management"></article>
+              </section>
+            </section>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div class="doc-preview-overlay hidden" id="docPreviewOverlay"></div>
+    <div class="toast-stack" id="toastStack"></div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
