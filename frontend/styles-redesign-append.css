@@ -1,0 +1,349 @@
+/* ===== EVERY SCOUTING REDESIGN: MODERN, MINIMALISTIC, COLORFUL ===== */
+
+/* Improved Notification Bell Icon & Utility Bar */
+.utility-btn {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: var(--text) !important;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.utility-btn:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  transform: translateY(-2px);
+}
+
+.utility-icon {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.nav-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--surface);
+}
+
+/* Enhanced Navigation Styling */
+.sidebar-nav {
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.nav-item {
+  display: grid !important;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(94, 125, 253, 0.12)) !important;
+  color: var(--text) !important;
+  border-color: rgba(249, 115, 22, 0.3) !important;
+  box-shadow: inset 0 0 0 2px rgba(249, 115, 22, 0.1);
+}
+
+.nav-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-icon {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(94, 125, 253, 0.12));
+}
+
+.nav-text {
+  font-size: 0.9rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+/* Improved Card & Panel Design */
+.card {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+  border-radius: 20px !important;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.content-panel {
+  padding: 32px;
+  gap: 24px;
+}
+
+.summary-card {
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.mini-card {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  gap: 8px;
+}
+
+/* Dashboard Spacing & Hierarchy */
+.dashboard-grid {
+  gap: 20px !important;
+  margin-bottom: 32px !important;
+}
+
+.section-grid {
+  gap: 24px !important;
+  margin: 24px 0 48px !important;
+}
+
+.list-grid {
+  gap: 24px !important;
+}
+
+/* Enhanced List Items */
+.list-item {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.list-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+
+/* Enhanced Chips for Status */
+.chip {
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Color-coded Status Badges */
+.chip.status-new,
+.chip.status-screening {
+  background: rgba(94, 125, 253, 0.16);
+  color: var(--accent);
+}
+
+.chip.status-interview,
+.chip.status-training {
+  background: rgba(255, 209, 102, 0.22);
+  color: #9b6a00;
+}
+
+.chip.status-registered,
+.chip.status-two-shifts {
+  background: rgba(39, 194, 160, 0.16);
+  color: #0a7f66;
+}
+
+.chip.status-approved {
+  background: rgba(94, 125, 253, 0.16);
+  color: var(--accent);
+}
+
+.chip.status-rejected {
+  background: rgba(255, 122, 89, 0.16);
+  color: var(--primary-dark);
+}
+
+.chip.status-pending {
+  background: rgba(255, 209, 102, 0.24);
+  color: #9b6a00;
+}
+
+.chip.status-paid {
+  background: rgba(39, 194, 160, 0.18);
+  color: #0a7f66;
+}
+
+/* Action Buttons with Better Spacing */
+.action-btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: rgba(37, 99, 235, 0.18);
+  border-color: rgba(37, 99, 235, 0.3);
+  transform: translateY(-2px);
+}
+
+.primary-btn {
+  background: var(--primary);
+  color: white;
+  font-weight: 800;
+  border-radius: 12px;
+  padding: 12px 24px;
+  min-height: 44px;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(249, 115, 22, 0.24);
+}
+
+/* Hero & Landing Page Improvements */
+.hero-stats {
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.hero-stats article {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: center;
+}
+
+/* Feature Pills on Landing Page */
+.feature-pill {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-weight: 800;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.feature-pill:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.24);
+  transform: translateY(-2px);
+}
+
+/* Improved Spacing Throughout */
+.workspace-utilitybar {
+  margin-bottom: 32px !important;
+  gap: 24px !important;
+  padding-bottom: 0 !important;
+  border-bottom: none !important;
+}
+
+.main-grid {
+  gap: 32px !important;
+}
+
+.content-panel > section {
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.content-panel > section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* Popover Improvements */
+.utility-popover {
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 20px;
+}
+
+.popover-item {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+  padding: 14px;
+}
+
+.popover-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Responsive improvements for workspace */
+@media (max-width: 1024px) {
+  .main-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar-nav {
+    position: relative;
+    top: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .sidebar-nav {
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .nav-item {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+
+  .nav-text {
+    font-size: 0.85rem;
+  }
+
+  .content-panel {
+    padding: 20px;
+  }
+
+  .utility-btn {
+    width: 40px;
+    height: 40px;
+  }
+}

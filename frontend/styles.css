@@ -102,8 +102,8 @@ button {
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
   backdrop-filter: blur(8px);
 }
 
@@ -200,7 +200,7 @@ button {
 .role-switcher,
 .sidebar-nav,
 .content-panel {
-  padding: 28px;
+  padding: 32px;
 }
 
 .eyebrow {
@@ -428,7 +428,8 @@ button:disabled {
 
 .section-grid {
   grid-template-columns: 0.85fr 1.15fr;
-  margin: 18px 0 42px;
+  margin: 24px 0 48px;
+  gap: 24px;
 }
 
 .application-form,
@@ -623,49 +624,78 @@ textarea {
 
 .dashboard-grid {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 18px;
+  margin-bottom: 32px;
+  gap: 20px;
 }
 
 .summary-card {
-  padding: 22px;
+  padding: 24px;
+  display: grid;
+  gap: 8px;
 }
 
 .main-grid {
-  grid-template-columns: 220px minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1fr);
   align-items: start;
-  gap: 20px;
+  gap: 32px;
 }
 
 .sidebar-nav {
   position: sticky;
   top: 20px;
-  gap: 16px;
+  gap: 12px;
   align-content: start;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
 }
 
 .nav-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
   align-items: center;
-  justify-content: space-between;
   text-align: left;
-  min-height: 44px;
-  padding: 0 14px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.64);
-  color: var(--text);
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
   font-weight: 700;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
 }
 
 .nav-item.active {
-  background: rgba(37, 99, 235, 0.08);
-  color: var(--primary-dark);
-  border-color: rgba(37, 99, 235, 0.14);
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(94, 125, 253, 0.12));
+  color: var(--text);
+  border-color: rgba(249, 115, 22, 0.3);
+  box-shadow: inset 0 0 0 2px rgba(249, 115, 22, 0.1);
 }
 
 .nav-group {
   display: grid;
   gap: 8px;
+}
+
+.nav-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.nav-item.active .nav-icon {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(94, 125, 253, 0.12));
+  color: var(--primary);
 }
 
 .nav-group + .nav-group {
@@ -686,13 +716,14 @@ textarea {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 26px;
-  min-height: 26px;
-  padding: 0 8px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
   border-radius: 999px;
-  background: rgba(255, 122, 89, 0.16);
-  color: var(--primary-dark);
-  font-size: 0.8rem;
+  background: var(--primary);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 800;
 }
 
 .hidden {
@@ -1840,9 +1871,10 @@ body[data-ui-density="compact"] .profile-block {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(24, 33, 43, 0.08);
+  gap: 24px;
+  padding-bottom: 0;
+  border-bottom: none;
+  margin-bottom: 32px;
 }
 
 .workspace-utility-left,
@@ -1854,10 +1886,23 @@ body[data-ui-density="compact"] .profile-block {
 
 .utility-btn {
   position: relative;
-  min-width: 48px;
-  width: 48px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
   padding: 0;
-  border-radius: 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  transition: all 0.2s ease;
+  font-weight: 700;
+}
+
+.utility-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(255, 255, 255, 0.24);
+  transform: translateY(-2px);
 }
 
 .utility-icon {
@@ -1874,12 +1919,13 @@ body[data-ui-density="compact"] .profile-block {
   top: calc(100% + 12px);
   right: 0;
   z-index: 20;
-  width: min(360px, calc(100vw - 32px));
-  padding: 18px;
-  border-radius: 22px;
+  width: min(400px, calc(100vw - 32px));
+  padding: 20px;
+  border-radius: var(--radius-xl);
   border: 1px solid var(--line);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 255, 0.98));
-  box-shadow: 0 22px 48px rgba(15, 23, 42, 0.14);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(8px);
 }
 
 body[data-ui-theme="dark"] .utility-popover {
