@@ -354,12 +354,12 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  background: #2563eb;
   color: white;
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.1em;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
 }
 
 .brand p {
