@@ -36,7 +36,7 @@
 
 .candidate-list-status .chip.active {
   background: rgba(37, 99, 235, 0.16);
-  color: #2563eb;
+  color: var(--primary);
   border-color: rgba(37, 99, 235, 0.25);
 }
 
@@ -176,7 +176,7 @@
   height: 28px;
   border-radius: 6px;
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(16, 185, 129, 0.1));
-  color: #2563eb;
+  color: var(--primary);
   font-weight: 700;
   font-size: 0.75rem;
   flex-shrink: 0;
@@ -222,7 +222,7 @@
 .period-chip.active {
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(16, 185, 129, 0.08));
   border-color: rgba(37, 99, 235, 0.2);
-  color: #2563eb;
+  color: var(--primary);
 }
 
 .finance-total {
@@ -240,7 +240,7 @@
 .finance-total strong {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #059669;
+  color: var(--success);
 }
 
 .finance-total span {
@@ -319,7 +319,7 @@
   width: 96px;
   height: 96px;
   border-radius: 16px;
-  border: 4px solid #2563eb;
+  border: 4px solid var(--primary);
   object-fit: cover;
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.2), rgba(16, 185, 129, 0.1));
 }
@@ -350,7 +350,7 @@
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(16, 185, 129, 0.08));
   border: 1px solid rgba(37, 99, 235, 0.2);
-  color: #2563eb;
+  color: var(--primary);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -446,7 +446,7 @@
   height: 40px;
   border-radius: 10px;
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.16), rgba(16, 185, 129, 0.08));
-  color: #2563eb;
+  color: var(--primary);
   font-weight: 700;
   font-size: 0.95rem;
 }
@@ -641,12 +641,12 @@
 
 .training-status.completed {
   background: rgba(5, 150, 105, 0.12);
-  color: #059669;
+  color: var(--success);
 }
 
 .training-status.pending {
   background: rgba(245, 158, 11, 0.12);
-  color: #d97706;
+  color: var(--warning);
 }
 
 /* ===== RESPONSIVE ===== */
