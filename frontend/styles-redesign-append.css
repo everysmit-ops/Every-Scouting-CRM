@@ -235,6 +235,155 @@
   box-shadow: 0 12px 28px rgba(249, 115, 22, 0.24);
 }
 
+/* Profile View Enhancements */
+.profile-showcase {
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(94, 125, 253, 0.08));
+}
+
+.profile-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 16px;
+  border: 3px solid var(--primary);
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.profile-section {
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-block {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Finance View Enhancements - Wallet/Payout Styling */
+.finance-row {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.finance-row:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.finance-total {
+  padding: 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(39, 194, 160, 0.12), rgba(94, 125, 253, 0.12));
+  border: 1px solid rgba(94, 125, 253, 0.2);
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.finance-ledger-row {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Teams View Enhancements */
+.team-card {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.team-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+
+.team-member-item {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Analytics View - Ranking & Stats */
+.rank-item {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.rank-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.rank-badge {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(94, 125, 253, 0.12));
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+/* Social/Forum View - Posts & Comments */
+.forum-card {
+  padding: 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.forum-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Training View */
+.training-lock {
+  border-radius: 16px;
+  padding: 18px;
+  background: rgba(255, 122, 89, 0.1);
+  border: 1px solid rgba(255, 122, 89, 0.2);
+}
+
+/* Offers/Tasks View */
+.offer-card,
+.task-card {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.offer-card:hover,
+.task-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+
 /* Hero & Landing Page Improvements */
 .hero-stats {
   gap: 16px;
@@ -311,6 +460,56 @@
   border-color: rgba(255, 255, 255, 0.18);
 }
 
+/* Form Styling Improvements */
+input,
+textarea,
+select {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: rgba(249, 115, 22, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+/* Comment Card Styling */
+.comment-card {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Calendar View */
+.calendar-row {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.calendar-row:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Document Preview */
+.candidate-doc-row {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 /* Responsive improvements for workspace */
 @media (max-width: 1024px) {
   .main-grid {
@@ -345,5 +544,62 @@
   .utility-btn {
     width: 40px;
     height: 40px;
+  }
+
+  .dashboard-grid {
+    gap: 12px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .list-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hero-stats {
+    grid-template-columns: 1fr !important;
+  }
+
+  .list-item {
+    padding: 12px;
+  }
+
+  .action-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .finance-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .section-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Dark theme adjustments */
+body[data-ui-theme="dark"] {
+  /* Colors are handled by theme variables, these are just additional tweaks */
+}
+
+/* Accessibility - Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+  }
+
+  .nav-item,
+  .list-item,
+  .action-btn,
+  .primary-btn,
+  .utility-btn,
+  .chip,
+  .card {
+    transition: none !important;
   }
 }
