@@ -31,7 +31,11 @@ function parseBody(request) {
 function serveStatic(urlPath, response) {
   const isUpload = urlPath.startsWith("/uploads/");
   const baseRoot = isUpload ? UPLOADS_ROOT : FRONTEND_ROOT;
-  const requestedPath = urlPath === "/" ? "/index.html" : urlPath;
+  const routeMap = {
+    "/": "/index.html",
+    "/workspace": "/workspace.html",
+  };
+  const requestedPath = routeMap[urlPath] || urlPath;
   const relativePath = isUpload ? requestedPath.replace("/uploads", "") : requestedPath;
   const filePath = path.join(baseRoot, relativePath);
 
