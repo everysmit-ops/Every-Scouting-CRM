@@ -68,6 +68,15 @@ function createApiRouter({ repository, service, realtime }) {
         return true;
       }
 
+      if (request.method === "PATCH" && url.pathname === "/api/auth/profile") {
+        const user = await resolveUser(request, response);
+        if (!user) return true;
+        const body = await parseBody(request);
+        sendJson(response, 200, await service.updateProfile(user, body));
+        realtime.publish({ type: "profile:update", scope: "workspace", targetUserIds: [user.id] });
+        return true;
+      }
+
       if (request.method === "POST" && url.pathname === "/api/public/applications") {
         const body = await parseBody(request);
         const result = await service.createPublicApplication(body);

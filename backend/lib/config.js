@@ -2,7 +2,10 @@ const path = require("path");
 const fs = require("fs");
 
 const ROOT = path.resolve(__dirname, "..", "..");
-const FRONTEND_ROOT = path.join(ROOT, "frontend");
+const LEGACY_FRONTEND_ROOT = path.join(ROOT, "frontend");
+const REACT_FRONTEND_ROOT = path.join(ROOT, "frontend-react");
+const REACT_FRONTEND_DIST_ROOT = path.join(REACT_FRONTEND_ROOT, "dist");
+const FRONTEND_ROOT = resolveFrontendRoot();
 const DB_PATH = path.join(ROOT, "backend", "data", "db.json");
 const ENV_PATH = path.join(ROOT, ".env");
 const UPLOADS_ROOT = path.join(ROOT, "backend", "uploads");
@@ -99,9 +102,20 @@ function loadEnvFile(filePath) {
   });
 }
 
+function resolveFrontendRoot() {
+  const reactIndexPath = path.join(REACT_FRONTEND_DIST_ROOT, "index.html");
+  if (fs.existsSync(reactIndexPath)) {
+    return REACT_FRONTEND_DIST_ROOT;
+  }
+  return LEGACY_FRONTEND_ROOT;
+}
+
 module.exports = {
   ROOT,
   FRONTEND_ROOT,
+  LEGACY_FRONTEND_ROOT,
+  REACT_FRONTEND_ROOT,
+  REACT_FRONTEND_DIST_ROOT,
   UPLOADS_ROOT,
   DB_PATH,
   ENV_PATH,

@@ -288,6 +288,12 @@ function createPostgresRepository() {
         teamId: row.team_id,
         subscription: row.subscription,
         theme: row.theme,
+        username: row.username,
+        bio: row.bio || "",
+        avatarUrl: row.avatar_url,
+        bannerUrl: row.banner_url,
+        socialLinks: row.social_links || [],
+        lastOnlineAt: row.last_online_at?.toISOString?.() || row.last_online_at,
         referralCode: row.referral_code,
         referralIncomePercent: row.referral_income_percent,
         payoutBoost: row.payout_boost,
@@ -585,6 +591,18 @@ function createPostgresRepository() {
         url: row.url,
         note: row.note,
         uploadedByUserId: row.uploaded_by_user_id,
+        createdAt: row.created_at?.toISOString?.() || row.created_at,
+      });
+    });
+    const commentsByCandidate = new Map();
+    candidateCommentsRes.rows.forEach((row) => {
+      if (!commentsByCandidate.has(row.candidate_id)) commentsByCandidate.set(row.candidate_id, []);
+      commentsByCandidate.get(row.candidate_id).push({
+        id: row.id,
+        candidateId: row.candidate_id,
+        authorId: row.author_id,
+        authorName: row.author_name,
+        body: row.body,
         createdAt: row.created_at?.toISOString?.() || row.created_at,
       });
     });
@@ -942,8 +960,8 @@ function createPostgresRepository() {
     for (const user of db.users) {
       await client.query(
         `INSERT INTO users
-        (id, name, email, password_hash, password_salt, password_updated_at, role, team_id, subscription, theme, referral_code, referral_income_percent, payout_boost, locale, permissions_override)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb)`,
+        (id, name, email, password_hash, password_salt, password_updated_at, role, team_id, subscription, theme, username, bio, avatar_url, banner_url, social_links, last_online_at, referral_code, referral_income_percent, payout_boost, locale, permissions_override)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb,$16,$17,$18,$19,$20,$21::jsonb)`,
         [
           user.id,
           user.name,
@@ -955,6 +973,12 @@ function createPostgresRepository() {
           textOrNull(user.teamId),
           user.subscription,
           user.theme,
+          textOrNull(user.username),
+          user.bio || "",
+          textOrNull(user.avatarUrl),
+          textOrNull(user.bannerUrl),
+          JSON.stringify(user.socialLinks || []),
+          textOrNull(user.lastOnlineAt),
           user.referralCode,
           user.referralIncomePercent,
           user.payoutBoost,
@@ -1174,6 +1198,12 @@ function createPostgresRepository() {
         teamId: row.team_id,
         subscription: row.subscription,
         theme: row.theme,
+        username: row.username,
+        bio: row.bio || "",
+        avatarUrl: row.avatar_url,
+        bannerUrl: row.banner_url,
+        socialLinks: row.social_links || [],
+        lastOnlineAt: row.last_online_at?.toISOString?.() || row.last_online_at,
         referralCode: row.referral_code,
         referralIncomePercent: row.referral_income_percent,
         payoutBoost: row.payout_boost,
@@ -1201,6 +1231,12 @@ function createPostgresRepository() {
         teamId: row.team_id,
         subscription: row.subscription,
         theme: row.theme,
+        username: row.username,
+        bio: row.bio || "",
+        avatarUrl: row.avatar_url,
+        bannerUrl: row.banner_url,
+        socialLinks: row.social_links || [],
+        lastOnlineAt: row.last_online_at?.toISOString?.() || row.last_online_at,
         referralCode: row.referral_code,
         referralIncomePercent: row.referral_income_percent,
         payoutBoost: row.payout_boost,
@@ -1356,8 +1392,8 @@ function createPostgresRepository() {
     async insertUser(user) {
       await pool.query(
         `INSERT INTO users
-        (id, name, email, password_hash, password_salt, password_updated_at, role, team_id, subscription, theme, referral_code, referral_income_percent, payout_boost, locale, permissions_override)
-        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb)`,
+        (id, name, email, password_hash, password_salt, password_updated_at, role, team_id, subscription, theme, username, bio, avatar_url, banner_url, social_links, last_online_at, referral_code, referral_income_percent, payout_boost, locale, permissions_override)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15::jsonb,$16,$17,$18,$19,$20,$21::jsonb)`,
         [
           user.id,
           user.name,
@@ -1369,6 +1405,12 @@ function createPostgresRepository() {
           textOrNull(user.teamId),
           user.subscription,
           user.theme,
+          textOrNull(user.username),
+          user.bio || "",
+          textOrNull(user.avatarUrl),
+          textOrNull(user.bannerUrl),
+          JSON.stringify(user.socialLinks || []),
+          textOrNull(user.lastOnlineAt),
           user.referralCode,
           user.referralIncomePercent,
           user.payoutBoost,
@@ -1382,6 +1424,59 @@ function createPostgresRepository() {
           [user.teamId, user.id],
         );
       }
+    },
+
+    async patchOwnProfile(userId, payload) {
+      const row = await queryOne(
+        `UPDATE users SET
+          name = COALESCE($2, name),
+          username = COALESCE($3, username),
+          bio = COALESCE($4, bio),
+          avatar_url = COALESCE($5, avatar_url),
+          banner_url = COALESCE($6, banner_url),
+          social_links = COALESCE($7::jsonb, social_links),
+          theme = COALESCE($8, theme),
+          locale = COALESCE($9, locale),
+          last_online_at = COALESCE($10, last_online_at)
+         WHERE id = $1
+         RETURNING *`,
+        [
+          userId,
+          textOrNull(payload.name),
+          textOrNull(payload.username),
+          payload.bio ?? null,
+          textOrNull(payload.avatarUrl),
+          textOrNull(payload.bannerUrl),
+          payload.socialLinks ? JSON.stringify(payload.socialLinks) : null,
+          textOrNull(payload.theme),
+          textOrNull(payload.locale),
+          textOrNull(payload.lastOnlineAt),
+        ],
+      );
+      if (!row) return null;
+      return {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        passwordHash: row.password_hash,
+        passwordSalt: row.password_salt,
+        passwordUpdatedAt: row.password_updated_at?.toISOString?.() || row.password_updated_at,
+        role: row.role,
+        teamId: row.team_id,
+        subscription: row.subscription,
+        theme: row.theme,
+        username: row.username,
+        bio: row.bio || "",
+        avatarUrl: row.avatar_url,
+        bannerUrl: row.banner_url,
+        socialLinks: row.social_links || [],
+        lastOnlineAt: row.last_online_at?.toISOString?.() || row.last_online_at,
+        referralCode: row.referral_code,
+        referralIncomePercent: row.referral_income_percent,
+        payoutBoost: row.payout_boost,
+        locale: row.locale,
+        permissionsOverride: row.permissions_override || {},
+      };
     },
 
     async insertCandidate(candidate) {

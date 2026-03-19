@@ -110,6 +110,12 @@ function createPlatformService(repository) {
       teamId: payload.teamId || db.teams[0]?.id || null,
       subscription: payload.subscription || "Scout Core",
       theme: payload.theme || "Fresh Start",
+      username: payload.username || String(payload.email || "").split("@")[0] || null,
+      bio: payload.bio || "",
+      avatarUrl: payload.avatarUrl || null,
+      bannerUrl: payload.bannerUrl || null,
+      socialLinks: Array.isArray(payload.socialLinks) ? payload.socialLinks : [],
+      lastOnlineAt: payload.lastOnlineAt || null,
       referralCode: payload.referralCode || `REF-${crypto.randomBytes(3).toString("hex").toUpperCase()}`,
       referralIncomePercent: Number(payload.referralIncomePercent || 5),
       payoutBoost: payload.payoutBoost || "5%",
@@ -1029,6 +1035,57 @@ function createPlatformService(repository) {
 
         createAudit(db, actor.id, "UPDATE", "user", target.id, { role: target.role, teamId: target.teamId });
         syncPayoutsInDb(db);
+        return { user: safeUser(target) };
+      });
+    },
+
+    async updateProfile(user, payload = {}) {
+      const socialLinks = Array.isArray(payload.socialLinks)
+        ? payload.socialLinks
+            .filter((item) => item && item.label && item.url)
+            .map((item) => ({ label: String(item.label).trim(), url: String(item.url).trim() }))
+        : undefined;
+
+      if (typeof repository.patchOwnProfile === "function") {
+        const updated = await repository.patchOwnProfile(user.id, {
+          name: payload.name ?? user.name,
+          username: payload.username ?? user.username ?? null,
+          bio: payload.bio ?? user.bio ?? "",
+          avatarUrl: payload.avatarUrl ?? user.avatarUrl ?? null,
+          bannerUrl: payload.bannerUrl ?? user.bannerUrl ?? null,
+          socialLinks,
+          theme: payload.theme ?? user.theme,
+          locale: payload.locale ?? user.locale,
+          lastOnlineAt: nowIso(),
+        });
+        if (!updated) throw new Error("User not found");
+        if (typeof repository.createAuditEntry === "function") {
+          await repository.createAuditEntry({
+            id: newId("audit"),
+            actorId: user.id,
+            action: "UPDATE",
+            entityType: "profile",
+            entityId: user.id,
+            details: { username: updated.username },
+            createdAt: nowIso(),
+          });
+        }
+        return { user: safeUser(updated) };
+      }
+
+      return repository.transaction(async (db) => {
+        const target = db.users.find((item) => item.id === user.id);
+        if (!target) throw new Error("User not found");
+        target.name = payload.name ?? target.name;
+        target.username = payload.username ?? target.username ?? String(target.email || "").split("@")[0];
+        target.bio = payload.bio ?? target.bio ?? "";
+        target.avatarUrl = payload.avatarUrl ?? target.avatarUrl ?? null;
+        target.bannerUrl = payload.bannerUrl ?? target.bannerUrl ?? null;
+        target.socialLinks = socialLinks ?? target.socialLinks ?? [];
+        target.theme = payload.theme ?? target.theme;
+        target.locale = payload.locale ?? target.locale;
+        target.lastOnlineAt = nowIso();
+        createAudit(db, user.id, "UPDATE", "profile", target.id, { username: target.username });
         return { user: safeUser(target) };
       });
     },
