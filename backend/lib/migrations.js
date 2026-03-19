@@ -27,11 +27,35 @@ async function getAppliedVersions(client) {
   return new Set(result.rows.map((row) => row.version));
 }
 
+async function hasLegacyInitialSchema(client) {
+  const result = await client.query(`
+    SELECT
+      to_regclass('public.teams') AS teams_table,
+      to_regclass('public.users') AS users_table,
+      to_regclass('public.offers') AS offers_table,
+      to_regclass('public.candidates') AS candidates_table
+  `);
+  const row = result.rows[0] || {};
+  return Boolean(row.teams_table && row.users_table && row.offers_table && row.candidates_table);
+}
+
+async function baselineLegacyInitialSchema(client, applied) {
+  const initialVersion = "001_initial_schema.sql";
+  if (applied.has(initialVersion)) return false;
+  if (applied.size > 0) return false;
+  const legacySchemaExists = await hasLegacyInitialSchema(client);
+  if (!legacySchemaExists) return false;
+  await client.query("INSERT INTO schema_migrations (version) VALUES ($1) ON CONFLICT (version) DO NOTHING", [initialVersion]);
+  applied.add(initialVersion);
+  return true;
+}
+
 async function getMigrationStatus() {
   const client = await getPool().connect();
   try {
     const files = getMigrationFiles();
     const applied = await getAppliedVersions(client);
+    await baselineLegacyInitialSchema(client, applied);
     return {
       files,
       applied: files.filter((file) => applied.has(file)),
@@ -48,6 +72,7 @@ async function applyMigrations() {
     await client.query("BEGIN");
     await ensureMigrationsTable(client);
     const applied = await getAppliedVersions(client);
+    await baselineLegacyInitialSchema(client, applied);
     const files = getMigrationFiles();
     const executed = [];
 
