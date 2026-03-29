@@ -55,8 +55,6 @@ let financeFilters = {
   scoutId: "all",
   teamId: "all",
 };
-let activeChatId = "";
-let chatSearch = "";
 let socialFilters = {
   type: "all",
   category: "all",
@@ -183,27 +181,6 @@ function downloadTextFile(filename, content, type = "text/plain;charset=utf-8") 
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-}
-
-function getChatKindLabel(chat) {
-  if (chat.global) return "Global";
-  if (chat.participantIds?.length === 2 && !chat.teamId) return "Direct";
-  return "Team";
-}
-
-function getChatUnreadCount(chat) {
-  return (chat.messages || []).slice(-6).filter((message) => message.authorId !== state.user.id).length;
-}
-
-function ensureActiveChat(chats) {
-  if (!chats.length) {
-    activeChatId = "";
-    return null;
-  }
-  const existing = chats.find((chat) => chat.id === activeChatId);
-  if (existing) return existing;
-  activeChatId = chats[0].id;
-  return chats[0];
 }
 
 function isInFinancePeriod(value, period) {
@@ -843,103 +820,6 @@ function renderDashboardView() {
   bindTrainingGuardButton();
 }
 
-function renderNotificationsView() {
-  const unread = getUnreadNotifications();
-  const items = (state.notifications || [])
-    .map(
-      (item) => `
-        <div class="list-item notification-card ${!(item.readBy || []).includes(state.user.id) ? "notification-unread" : ""}">
-          <div class="list-head">
-            <strong>${item.text}</strong>
-            <span class="chip">${formatDateLabel(item.createdAt)}</span>
-          </div>
-          <div class="inline-actions">
-            <button class="ghost-btn" type="button" data-open-notification-target="${item.id}">Открыть раздел</button>
-            ${
-              !(item.readBy || []).includes(state.user.id)
-                ? `<button class="action-btn" type="button" data-read-notification="${item.id}">Прочитано</button>`
-                : `<span class="chip">Прочитано</span>`
-            }
-          </div>
-        </div>
-      `,
-    )
-    .join("");
-
-  el("view-notifications").innerHTML = `
-    <div class="panel-header">
-      <div>
-        <h3>Центр уведомлений</h3>
-        <div class="panel-subtitle">Все системные события, непрочитанные сигналы и быстрые переходы к рабочим разделам.</div>
-      </div>
-      <button class="primary-btn" id="readAllNotificationsBtn" ${!unread.length ? "disabled" : ""}>Прочитать все</button>
-    </div>
-    <section class="stats-grid">
-      <article class="mini-card">
-        <span class="mini-label">Всего</span>
-        <div class="metric-value">${state.notifications.length}</div>
-        <div class="small-note">События, видимые по вашей роли</div>
-      </article>
-      <article class="mini-card">
-        <span class="mini-label">Непрочитанные</span>
-        <div class="metric-value">${unread.length}</div>
-        <div class="small-note">Требуют внимания прямо сейчас</div>
-      </article>
-      <article class="mini-card">
-        <span class="mini-label">Live-канал</span>
-        <div class="metric-value">${liveTransport === "sse" ? "SSE" : "Polling"}</div>
-        <div class="small-note">Текущий способ доставки сигналов</div>
-      </article>
-    </section>
-    <div class="table-like">${items || '<p class="empty-text">Уведомлений пока нет.</p>'}</div>
-  `;
-
-  const readAllNotificationsBtn = document.getElementById("readAllNotificationsBtn");
-  if (readAllNotificationsBtn) {
-    readAllNotificationsBtn.addEventListener("click", async () => {
-      try {
-        await api(`${API.notifications}/read-all`, { method: "POST" });
-        await reloadWorkspace();
-      } catch (error) {
-        toast(error.message);
-      }
-    });
-  }
-
-  document.querySelectorAll("[data-read-notification]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      try {
-        await api(`${API.notifications}/${button.dataset.readNotification}/read`, { method: "PATCH" });
-        await reloadWorkspace();
-      } catch (error) {
-        toast(error.message);
-      }
-    });
-  });
-
-  document.querySelectorAll("[data-open-notification-target]").forEach((button) => {
-    button.addEventListener("click", async () => {
-      const notification = (state.notifications || []).find((item) => item.id === button.dataset.openNotificationTarget);
-      if (!notification) return;
-      const target = resolveNotificationTarget(notification);
-      if (!(notification.readBy || []).includes(state.user.id)) {
-        try {
-          await api(`${API.notifications}/${notification.id}/read`, { method: "PATCH" });
-          state.notifications = state.notifications.map((item) =>
-            item.id === notification.id ? { ...item, readBy: [...(item.readBy || []), state.user.id] } : item,
-          );
-        } catch (error) {
-          toast(error.message);
-        }
-      }
-      activeView = target.view;
-      if (target.entityType && target.entityId) {
-        setDeepLink(target.view, target.entityType, target.entityId);
-      }
-      renderWorkspace();
-    });
-  });
-}
 
 function renderCandidatesView() {
   const scoutOptions = optionsForUsers(["scout", "referral"]);
@@ -3106,7 +2986,6 @@ function renderView() {
 
   const renderers = {
     dashboard: renderDashboardView,
-    notifications: renderNotificationsView,
     candidates: renderCandidatesView,
     calendar: renderCalendarView,
     offers: renderOffersView,

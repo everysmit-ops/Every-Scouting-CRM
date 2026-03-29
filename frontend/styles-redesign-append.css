@@ -1,0 +1,661 @@
+/* ===== EVERY SCOUTING REDESIGN: MODERN, MINIMALISTIC, COLORFUL ===== */
+
+/* Improved Notification Bell Icon & Utility Bar */
+.utility-btn {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  color: var(--text) !important;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+}
+
+.utility-btn:hover {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.24) !important;
+  transform: translateY(-2px);
+}
+
+.utility-icon {
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.nav-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--surface);
+}
+
+/* Enhanced Navigation Styling */
+.sidebar-nav {
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+}
+
+.nav-item {
+  display: grid !important;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.nav-item.active {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.16), rgba(94, 125, 253, 0.12)) !important;
+  color: var(--text) !important;
+  border-color: rgba(249, 115, 22, 0.3) !important;
+  box-shadow: inset 0 0 0 2px rgba(249, 115, 22, 0.1);
+}
+
+.nav-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.nav-item.active .nav-icon {
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(94, 125, 253, 0.12));
+}
+
+.nav-text {
+  font-size: 0.9rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+/* Improved Card & Panel Design */
+.card {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+  border-radius: 20px !important;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+
+.content-panel {
+  padding: 32px;
+  gap: 24px;
+}
+
+.summary-card {
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.mini-card {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  gap: 8px;
+}
+
+/* Dashboard Spacing & Hierarchy */
+.dashboard-grid {
+  gap: 20px !important;
+  margin-bottom: 32px !important;
+}
+
+.section-grid {
+  gap: 24px !important;
+  margin: 24px 0 48px !important;
+}
+
+.list-grid {
+  gap: 24px !important;
+}
+
+/* Enhanced List Items */
+.list-item {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.list-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+
+/* Enhanced Chips for Status */
+.chip {
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Color-coded Status Badges */
+.chip.status-new,
+.chip.status-screening {
+  background: rgba(94, 125, 253, 0.16);
+  color: var(--accent);
+}
+
+.chip.status-interview,
+.chip.status-training {
+  background: rgba(255, 209, 102, 0.22);
+  color: #9b6a00;
+}
+
+.chip.status-registered,
+.chip.status-two-shifts {
+  background: rgba(39, 194, 160, 0.16);
+  color: #0a7f66;
+}
+
+.chip.status-approved {
+  background: rgba(94, 125, 253, 0.16);
+  color: var(--accent);
+}
+
+.chip.status-rejected {
+  background: rgba(255, 122, 89, 0.16);
+  color: var(--primary-dark);
+}
+
+.chip.status-pending {
+  background: rgba(255, 209, 102, 0.24);
+  color: #9b6a00;
+}
+
+.chip.status-paid {
+  background: rgba(39, 194, 160, 0.18);
+  color: #0a7f66;
+}
+
+/* Action Buttons with Better Spacing */
+.action-btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--accent);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: rgba(37, 99, 235, 0.18);
+  border-color: rgba(37, 99, 235, 0.3);
+  transform: translateY(-2px);
+}
+
+.primary-btn {
+  background: var(--primary);
+  color: white;
+  font-weight: 800;
+  border-radius: 12px;
+  padding: 12px 24px;
+  min-height: 44px;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(249, 115, 22, 0.24);
+}
+
+/* Profile View Enhancements */
+.profile-showcase {
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.12), rgba(94, 125, 253, 0.08));
+}
+
+.profile-avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 16px;
+  border: 3px solid var(--primary);
+  object-fit: cover;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.profile-section {
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-block {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Finance View Enhancements - Wallet/Payout Styling */
+.finance-row {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.finance-row:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.finance-total {
+  padding: 20px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(39, 194, 160, 0.12), rgba(94, 125, 253, 0.12));
+  border: 1px solid rgba(94, 125, 253, 0.2);
+  font-weight: 800;
+  margin-bottom: 20px;
+}
+
+.finance-ledger-row {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Teams View Enhancements */
+.team-card {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.team-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+
+.team-member-item {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Analytics View - Ranking & Stats */
+.rank-item {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.rank-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.rank-badge {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(94, 125, 253, 0.12));
+  color: var(--primary);
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+/* Social/Forum View - Posts & Comments */
+.forum-card {
+  padding: 18px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.forum-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Training View */
+.training-lock {
+  border-radius: 16px;
+  padding: 18px;
+  background: rgba(255, 122, 89, 0.1);
+  border: 1px solid rgba(255, 122, 89, 0.2);
+}
+
+/* Offers/Tasks View */
+.offer-card,
+.task-card {
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.offer-card:hover,
+.task-card:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-2px);
+}
+
+/* Hero & Landing Page Improvements */
+.hero-stats {
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.hero-stats article {
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: center;
+}
+
+/* Feature Pills on Landing Page */
+.feature-pill {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-weight: 800;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.feature-pill:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.24);
+  transform: translateY(-2px);
+}
+
+/* Improved Spacing Throughout */
+.workspace-utilitybar {
+  margin-bottom: 32px !important;
+  gap: 24px !important;
+  padding-bottom: 0 !important;
+  border-bottom: none !important;
+}
+
+.main-grid {
+  gap: 32px !important;
+}
+
+.content-panel > section {
+  margin-top: 28px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.content-panel > section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* Popover Improvements */
+.utility-popover {
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.2);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  padding: 20px;
+}
+
+.popover-item {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+  padding: 14px;
+}
+
+.popover-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Form Styling Improvements */
+input,
+textarea,
+select {
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: rgba(249, 115, 22, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+/* Comment Card Styling */
+.comment-card {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Calendar View */
+.calendar-row {
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.2s ease;
+}
+
+.calendar-row:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Document Preview */
+.candidate-doc-row {
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Responsive improvements for workspace */
+@media (max-width: 1024px) {
+  .main-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar-nav {
+    position: relative;
+    top: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .sidebar-nav {
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .nav-item {
+    min-height: 44px;
+    padding: 8px 12px;
+  }
+
+  .nav-text {
+    font-size: 0.85rem;
+  }
+
+  .content-panel {
+    padding: 20px;
+  }
+
+  .utility-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dashboard-grid {
+    gap: 12px !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .list-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hero-stats {
+    grid-template-columns: 1fr !important;
+  }
+
+  .list-item {
+    padding: 12px;
+  }
+
+  .action-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .finance-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .section-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Dark theme adjustments */
+body[data-ui-theme="dark"] {
+  /* Colors are handled by theme variables, these are just additional tweaks */
+}
+
+/* Featured Highlights - Landing Page */
+.features-highlight {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.feature-highlight-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(59, 130, 246, 0.06));
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  transition: all 0.2s ease;
+}
+
+.feature-highlight-item:hover {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(59, 130, 246, 0.1));
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+}
+
+.feature-highlight-icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.16), rgba(236, 72, 153, 0.08));
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.feature-highlight-content {
+  display: grid;
+  gap: 6px;
+}
+
+.feature-highlight-content strong {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.feature-highlight-content p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+/* Accessibility - Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+  }
+
+  .nav-item,
+  .list-item,
+  .action-btn,
+  .primary-btn,
+  .utility-btn,
+  .chip,
+  .card,
+  .feature-highlight-item {
+    transition: none !important;
+  }
+}

@@ -1,4 +1,5 @@
 :root {
+  /* ===== COLORS ===== */
   /* Light, airy, colorful base palette */
   --bg: #f5f7fb;
   --surface: #ffffff;
@@ -12,9 +13,38 @@
   --sun: #fbbf24;
   --line: rgba(148, 163, 184, 0.3);
   --shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
-  --radius-xl: 24px;
-  --radius-lg: 18px;
-  --radius-md: 14px;
+
+  /* Status colors */
+  --success: #059669;
+  --warning: #d97706;
+  --error: #dc2626;
+
+  /* ===== SPACING SYSTEM (8px base unit) ===== */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 20px;
+  --space-2xl: 24px;
+  --space-3xl: 28px;
+  --space-4xl: 32px;
+  --space-5xl: 40px;
+
+  /* ===== BORDER RADIUS ===== */
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 24px;
+
+  /* ===== TYPOGRAPHY ===== */
+  --font-family: "Manrope", sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
 }
 
 body[data-ui-theme="dark"] {
@@ -30,6 +60,11 @@ body[data-ui-theme="dark"] {
   --sun: #facc15;
   --line: rgba(30, 64, 175, 0.55);
   --shadow: 0 22px 60px rgba(15, 23, 42, 0.75);
+
+  /* Dark theme status colors */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
 }
 
 body[data-ui-accent="mint"] {
